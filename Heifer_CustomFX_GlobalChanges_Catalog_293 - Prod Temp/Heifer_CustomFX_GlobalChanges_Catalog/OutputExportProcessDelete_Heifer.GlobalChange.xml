@@ -1,0 +1,100 @@
+﻿<GlobalChangeSpec xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="bb_appfx_globalchange"
+                  ID="f8faa855-3223-4cb7-816f-778914dfa438" Name="Export Process Output Delete Global Change - Heifer"
+                  Description="Deletes export process output for specified export processes based on a selection."
+                  Author="HEIFERNET\khamling" SPName="USP_GLOBALCHANGE_EXPORTPROCESSOUTPUTDELETE_HEIFER" DisplayName="Export process output delete - Heifer"
+                  GlobalChangeFolder="Business Process" >
+
+  <CreateProcedureSQL>
+
+    create procedure dbo.[USP_GLOBALCHANGE_EXPORTPROCESSOUTPUTDELETE_HEIFER]
+    (      @CHANGEAGENTID uniqueidentifier = null,      @ASOF as datetime = null,      @NUMBERADDED integer = 0 output,
+    @NUMBEREDITED integer = 0 output,      @NUMBERDELETED integer = 0 output,      @SELECTIONID uniqueidentifier = null )     
+    with execute as owner    
+    as begin     
+    set nocount on;
+    declare @CUTOFF datetime;    
+    declare @TABLENAME nvarchar(128);   
+    declare @SQL nvarchar(max);  
+    set @NUMBERADDED = 0;
+    set @NUMBEREDITED = 0; 
+    set @NUMBERDELETED = 0;
+    begin try
+
+    declare @PARAMETERTABLES table ([TABLENAME] nvarchar(128) not null);
+    insert into @PARAMETERTABLES
+    select [TABLENAME] from dbo.[businessprocessoutput] where [TABLENAME] is not null
+    and [ID] in (select [ID] from dbo.[UFN_IDSETREADER_GETRESULTS_GUID](@SELECTIONID));
+
+    declare PARAMETERTABLES cursor local fast_forward for
+    select [TABLENAME] from @PARAMETERTABLES;
+
+    open PARAMETERTABLES;
+    fetch next from PARAMETERTABLES into @TABLENAME;
+    while (@@FETCH_STATUS = 0)
+    begin
+
+--    set @SQL = 'select [BUSINESSPROCESSSTATUS].[ID] ' +      'from dbo.[' + @TABLENAME + '] as [STATUSTABLE] ' +
+--    'inner join dbo.[BUSINESSPROCESSSTATUS] on [BUSINESSPROCESSSTATUS].[BUSINESSPROCESSPARAMETERSETID] = [STATUSTABLE].[ID] ' +
+--    'inner join dbo.[BUSINESSPROCESSOUTPUT] on [BUSINESSPROCESSOUTPUT].[BUSINESSPROCESSSTATUSID] = [BUSINESSPROCESSSTATUS].[ID] ' +
+--    'where [BUSINESSPROCESSOUTPUT].[DATEADDED] &lt; @CUTOFF';
+
+    set @SQL = 'drop table dbo.[' + @TABLENAME + '] ' ;
+
+    begin try
+    exec sp_executesql @SQL
+    set @NUMBERDELETED = @NUMBERDELETED +1;
+    end try
+    begin catch
+    -- do nothing (table has likely already been dropped)
+    end catch
+
+    -- delete from dbo.[BUSINESSPROCESSOUTPUT] where [BUSINESSPROCESSSTATUSID] in (select [BUSINESSPROCESSSTATUSID] from #STATUSES);
+    update dbo.businessprocessoutput set tablename = 'DELETED_' + tablename where tablename=@TABLENAME and tablename not like 'DELETED_%'
+
+
+    fetch next from PARAMETERTABLES into @TABLENAME;
+    end
+    close PARAMETERTABLES;
+    deallocate PARAMETERTABLES;
+    end try
+    begin catch
+    exec dbo.[USP_RAISE_ERROR];
+    return 1;
+    end catch
+    return 0;
+    end
+  </CreateProcedureSQL>
+  <ParametersFormMetaData>
+    <FormMetaData xmlns="bb_appfx_commontypes">
+      <FormFields>
+        <FormField FieldID="SELECTIONID" DataType="Guid" Caption="Selection (Business Process Output - Heifer)" Required="true">
+          <SearchList SearchListID="1F0E603C-1C55-4E1E-8218-BDB877B2CBE8">
+          </SearchList>
+        </FormField>
+      </FormFields>
+      <WebUIComponent>
+        <WebUI>
+          <DefaultWebUI />
+        </WebUI>
+      </WebUIComponent>
+ 
+    </FormMetaData>
+  </ParametersFormMetaData>
+</GlobalChangeSpec>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

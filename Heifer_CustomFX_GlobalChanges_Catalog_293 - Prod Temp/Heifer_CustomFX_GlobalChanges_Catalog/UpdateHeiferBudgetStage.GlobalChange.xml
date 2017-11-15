@@ -1,0 +1,617 @@
+﻿  <GlobalChangeSpec
+    xmlns="bb_appfx_globalchange"
+    xmlns:common="bb_appfx_commontypes"
+    ID="d838db9e-b677-495f-b49c-a4fc50b7b4c4"
+    Name="Update Heifer Budget Stage Global Change"
+    Description="Update Heifer Budget Stage Global Change"
+    Author="HEIFERNET\khamling"
+    DisplayName="Update Heifer Budget Stage Global Change"
+    GlobalChangeFolder="Budget"
+    SPName="USR_USP_GLOBALCHANGE_UPDATEHEIFERBUDGETSTAGE"
+>
+
+    <!-- describe the SP that performs the global change operation -->
+    <CreateProcedureSQL>
+      <![CDATA[
+create procedure dbo.USR_USP_GLOBALCHANGE_UPDATEHEIFERBUDGETSTAGE
+(
+	@CHANGEAGENTID uniqueidentifier = null,
+	@ASOF as datetime = null,
+	@NUMBERADDED int = 0 output,
+	@NUMBEREDITED int = 0 output,
+	@NUMBERDELETED int = 0 output,
+  @FIELD1 nvarchar(1)
+)
+as			
+	set nocount off;
+	
+  declare @I_MAX integer
+  declare @I integer
+	declare @CURRENTDATE datetime
+	set @CURRENTDATE = getdate();
+	set @NUMBERADDED = 0;
+	set @NUMBEREDITED = 0;
+	set @NUMBERDELETED = 0; 
+	
+	if @CHANGEAGENTID is null
+		exec dbo.USP_CHANGEAGENT_GETORCREATECHANGEAGENT @CHANGEAGENTID output;
+					
+	begin try
+		-- do the global change operation here, and set @NUMBERADDED, @NUMBEREDITED, and/or @NUMBERDELETED as appropriate
+		
+      
+-----------------------------------------------------------------------------
+    declare @T table
+    (
+      PK int identity(1,1),  
+      BUDGETID uniqueidentifier,
+      DESIGNATIONID uniqueidentifier
+    )
+    set @I = 1
+    
+    insert into @T
+	    select id, designationid from usr_heiferbudgetstage where award='HPIAA000000000'   
+    
+    declare @BUDGETID uniqueidentifier
+    declare @DESIGNATIONID uniqueidentifier    
+        
+    select @I_MAX = count(*) from @T
+    --set @I_MAX=5
+    
+		--BEGIN LOOPING THROUGH TABLE DEFINED ABOVE 
+    while @I <= @I_MAX
+	  begin 		
+			  select 
+          @BUDGETID = BUDGETID,
+          @DESIGNATIONID = DESIGNATIONID
+        from 
+          @T 
+        where 
+          PK = @I
+ 
+-- handle REVENUE_YYYY fields for all years
+update usr_heiferbudgetstage
+set REVENUE_2014 =
+ (
+   select revenue from 
+   (
+     select distinct	[V_QUERY_REVENUE\Revenue Splits\Designation].[USERID] as [Lookup ID],
+	[V_QUERY_REVENUE\Revenue Splits\Designation].ID as [Designation ID],
+	[V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR] as [FY],
+	sum([V_QUERY_REVENUE\Revenue Splits].[AMOUNT]) as [Revenue],
+	[V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID] as [Application Details\Base currency ID]
+from [dbo].[V_QUERY_REVENUE] as [V_QUERY_REVENUE]
+inner join [dbo].[V_QUERY_REVENUESPLIT] as [V_QUERY_REVENUE\Revenue Splits] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Revenue Splits].[REVENUEID]
+inner join [dbo].[V_QUERY_DESIGNATION] as [V_QUERY_REVENUE\Revenue Splits\Designation] on [V_QUERY_REVENUE\Revenue Splits].[DESIGNATIONID] = [V_QUERY_REVENUE\Revenue Splits\Designation].[ID]
+inner join [dbo].[USR_V_QUERY_REVENUEITEMS] as [V_QUERY_REVENUE\Heifer Gifts] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Heifer Gifts].[ID]
+left outer join [dbo].[V_QUERY_ATTRIBUTE89662FAC4D144150B184F91503B51AAA] as [V_QUERY_REVENUE\Agresso - Award Number Attribute] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Agresso - Award Number Attribute].[ID]
+where [V_QUERY_REVENUE\Revenue Splits].[GLREVENUECATEGORYMAPPINGID] in (N'20ad98dc-4d7e-446b-a15d-965c8e1f2c16', N'de56f821-01b0-42ae-95a1-0c1f0847b083')
+ and  [V_QUERY_REVENUE\Revenue Splits\Designation].id = @DESIGNATIONID
+ and FISCALYEAR='2014'
+/*SpecificDate*/
+and ([V_QUERY_REVENUE].[DATE] >= '2013-07-01T00:00:00.000') 
+and ([V_QUERY_REVENUE].[DATE] < '2014-07-01T00:00:00.000') 
+ and ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUEID] = N'ca162a9a-9e3f-4bd1-af6c-98c4437817d4'
+ or ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] is null or [V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] = ''))
+group by [V_QUERY_REVENUE\Revenue Splits\Designation].[USERID],[V_QUERY_REVENUE\Revenue Splits\Designation].ID, [V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR], [V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID]
+--order by [Lookup ID] asc
+   ) as Table1
+ )
+where id = @BUDGETID
+
+update usr_heiferbudgetstage
+set REVENUE_2015 =
+ (
+   select revenue from 
+   (
+     select distinct	[V_QUERY_REVENUE\Revenue Splits\Designation].[USERID] as [Lookup ID],
+	[V_QUERY_REVENUE\Revenue Splits\Designation].ID as [Designation ID],
+	[V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR] as [FY],
+	sum([V_QUERY_REVENUE\Revenue Splits].[AMOUNT]) as [Revenue],
+	[V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID] as [Application Details\Base currency ID]
+from [dbo].[V_QUERY_REVENUE] as [V_QUERY_REVENUE]
+inner join [dbo].[V_QUERY_REVENUESPLIT] as [V_QUERY_REVENUE\Revenue Splits] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Revenue Splits].[REVENUEID]
+inner join [dbo].[V_QUERY_DESIGNATION] as [V_QUERY_REVENUE\Revenue Splits\Designation] on [V_QUERY_REVENUE\Revenue Splits].[DESIGNATIONID] = [V_QUERY_REVENUE\Revenue Splits\Designation].[ID]
+inner join [dbo].[USR_V_QUERY_REVENUEITEMS] as [V_QUERY_REVENUE\Heifer Gifts] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Heifer Gifts].[ID]
+left outer join [dbo].[V_QUERY_ATTRIBUTE89662FAC4D144150B184F91503B51AAA] as [V_QUERY_REVENUE\Agresso - Award Number Attribute] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Agresso - Award Number Attribute].[ID]
+where [V_QUERY_REVENUE\Revenue Splits].[GLREVENUECATEGORYMAPPINGID] in (N'20ad98dc-4d7e-446b-a15d-965c8e1f2c16', N'de56f821-01b0-42ae-95a1-0c1f0847b083')
+ and  [V_QUERY_REVENUE\Revenue Splits\Designation].id = @DESIGNATIONID
+ and FISCALYEAR='2015'
+/*SpecificDate*/
+and ([V_QUERY_REVENUE].[DATE] >= '2014-07-01T00:00:00.000') 
+and ([V_QUERY_REVENUE].[DATE] < '2015-07-01T00:00:00.000') 
+ and ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUEID] = N'ca162a9a-9e3f-4bd1-af6c-98c4437817d4'
+ or ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] is null or [V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] = ''))
+group by [V_QUERY_REVENUE\Revenue Splits\Designation].[USERID],[V_QUERY_REVENUE\Revenue Splits\Designation].ID, [V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR], [V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID]
+--order by [Lookup ID] asc
+   ) as Table1
+ )
+where id = @BUDGETID
+
+update usr_heiferbudgetstage
+set REVENUE_2016 =
+ (
+   select revenue from 
+   (
+     select distinct	[V_QUERY_REVENUE\Revenue Splits\Designation].[USERID] as [Lookup ID],
+	[V_QUERY_REVENUE\Revenue Splits\Designation].ID as [Designation ID],
+	[V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR] as [FY],
+	sum([V_QUERY_REVENUE\Revenue Splits].[AMOUNT]) as [Revenue],
+	[V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID] as [Application Details\Base currency ID]
+from [dbo].[V_QUERY_REVENUE] as [V_QUERY_REVENUE]
+inner join [dbo].[V_QUERY_REVENUESPLIT] as [V_QUERY_REVENUE\Revenue Splits] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Revenue Splits].[REVENUEID]
+inner join [dbo].[V_QUERY_DESIGNATION] as [V_QUERY_REVENUE\Revenue Splits\Designation] on [V_QUERY_REVENUE\Revenue Splits].[DESIGNATIONID] = [V_QUERY_REVENUE\Revenue Splits\Designation].[ID]
+inner join [dbo].[USR_V_QUERY_REVENUEITEMS] as [V_QUERY_REVENUE\Heifer Gifts] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Heifer Gifts].[ID]
+left outer join [dbo].[V_QUERY_ATTRIBUTE89662FAC4D144150B184F91503B51AAA] as [V_QUERY_REVENUE\Agresso - Award Number Attribute] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Agresso - Award Number Attribute].[ID]
+where [V_QUERY_REVENUE\Revenue Splits].[GLREVENUECATEGORYMAPPINGID] in (N'20ad98dc-4d7e-446b-a15d-965c8e1f2c16', N'de56f821-01b0-42ae-95a1-0c1f0847b083')
+ and  [V_QUERY_REVENUE\Revenue Splits\Designation].id = @DESIGNATIONID
+ and FISCALYEAR='2016'
+/*SpecificDate*/
+and ([V_QUERY_REVENUE].[DATE] >= '2015-07-01T00:00:00.000') 
+and ([V_QUERY_REVENUE].[DATE] < '2016-07-01T00:00:00.000') 
+ and ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUEID] = N'ca162a9a-9e3f-4bd1-af6c-98c4437817d4'
+ or ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] is null or [V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] = ''))
+group by [V_QUERY_REVENUE\Revenue Splits\Designation].[USERID],[V_QUERY_REVENUE\Revenue Splits\Designation].ID, [V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR], [V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID]
+--order by [Lookup ID] asc
+   ) as Table1
+ )
+where id = @BUDGETID
+
+update usr_heiferbudgetstage
+set REVENUE_2017 =
+ (
+   select revenue from 
+   (
+     select distinct	[V_QUERY_REVENUE\Revenue Splits\Designation].[USERID] as [Lookup ID],
+	[V_QUERY_REVENUE\Revenue Splits\Designation].ID as [Designation ID],
+	[V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR] as [FY],
+	sum([V_QUERY_REVENUE\Revenue Splits].[AMOUNT]) as [Revenue],
+	[V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID] as [Application Details\Base currency ID]
+from [dbo].[V_QUERY_REVENUE] as [V_QUERY_REVENUE]
+inner join [dbo].[V_QUERY_REVENUESPLIT] as [V_QUERY_REVENUE\Revenue Splits] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Revenue Splits].[REVENUEID]
+inner join [dbo].[V_QUERY_DESIGNATION] as [V_QUERY_REVENUE\Revenue Splits\Designation] on [V_QUERY_REVENUE\Revenue Splits].[DESIGNATIONID] = [V_QUERY_REVENUE\Revenue Splits\Designation].[ID]
+inner join [dbo].[USR_V_QUERY_REVENUEITEMS] as [V_QUERY_REVENUE\Heifer Gifts] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Heifer Gifts].[ID]
+left outer join [dbo].[V_QUERY_ATTRIBUTE89662FAC4D144150B184F91503B51AAA] as [V_QUERY_REVENUE\Agresso - Award Number Attribute] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Agresso - Award Number Attribute].[ID]
+where [V_QUERY_REVENUE\Revenue Splits].[GLREVENUECATEGORYMAPPINGID] in (N'20ad98dc-4d7e-446b-a15d-965c8e1f2c16', N'de56f821-01b0-42ae-95a1-0c1f0847b083')
+ and  [V_QUERY_REVENUE\Revenue Splits\Designation].id = @DESIGNATIONID
+ and FISCALYEAR='2017'
+/*SpecificDate*/
+and ([V_QUERY_REVENUE].[DATE] >= '2016-07-01T00:00:00.000') 
+and ([V_QUERY_REVENUE].[DATE] < '2017-07-01T00:00:00.000') 
+ and ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUEID] = N'ca162a9a-9e3f-4bd1-af6c-98c4437817d4'
+ or ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] is null or [V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] = ''))
+group by [V_QUERY_REVENUE\Revenue Splits\Designation].[USERID],[V_QUERY_REVENUE\Revenue Splits\Designation].ID, [V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR], [V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID]
+--order by [Lookup ID] asc
+   ) as Table1
+ )
+where id = @BUDGETID
+
+update usr_heiferbudgetstage
+set REVENUE_2018 =
+ (
+   select revenue from 
+   (
+     select distinct	[V_QUERY_REVENUE\Revenue Splits\Designation].[USERID] as [Lookup ID],
+	[V_QUERY_REVENUE\Revenue Splits\Designation].ID as [Designation ID],
+	[V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR] as [FY],
+	sum([V_QUERY_REVENUE\Revenue Splits].[AMOUNT]) as [Revenue],
+	[V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID] as [Application Details\Base currency ID]
+from [dbo].[V_QUERY_REVENUE] as [V_QUERY_REVENUE]
+inner join [dbo].[V_QUERY_REVENUESPLIT] as [V_QUERY_REVENUE\Revenue Splits] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Revenue Splits].[REVENUEID]
+inner join [dbo].[V_QUERY_DESIGNATION] as [V_QUERY_REVENUE\Revenue Splits\Designation] on [V_QUERY_REVENUE\Revenue Splits].[DESIGNATIONID] = [V_QUERY_REVENUE\Revenue Splits\Designation].[ID]
+inner join [dbo].[USR_V_QUERY_REVENUEITEMS] as [V_QUERY_REVENUE\Heifer Gifts] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Heifer Gifts].[ID]
+left outer join [dbo].[V_QUERY_ATTRIBUTE89662FAC4D144150B184F91503B51AAA] as [V_QUERY_REVENUE\Agresso - Award Number Attribute] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Agresso - Award Number Attribute].[ID]
+where [V_QUERY_REVENUE\Revenue Splits].[GLREVENUECATEGORYMAPPINGID] in (N'20ad98dc-4d7e-446b-a15d-965c8e1f2c16', N'de56f821-01b0-42ae-95a1-0c1f0847b083')
+ and  [V_QUERY_REVENUE\Revenue Splits\Designation].id = @DESIGNATIONID
+ and FISCALYEAR='2018'
+/*SpecificDate*/
+and ([V_QUERY_REVENUE].[DATE] >= '2017-07-01T00:00:00.000') 
+and ([V_QUERY_REVENUE].[DATE] < '2018-07-01T00:00:00.000') 
+ and ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUEID] = N'ca162a9a-9e3f-4bd1-af6c-98c4437817d4'
+ or ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] is null or [V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] = ''))
+group by [V_QUERY_REVENUE\Revenue Splits\Designation].[USERID],[V_QUERY_REVENUE\Revenue Splits\Designation].ID, [V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR], [V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID]
+--order by [Lookup ID] asc
+   ) as Table1
+ )
+where id = @BUDGETID
+
+update usr_heiferbudgetstage
+set REVENUE_2019 =
+ (
+   select revenue from 
+   (
+     select distinct	[V_QUERY_REVENUE\Revenue Splits\Designation].[USERID] as [Lookup ID],
+	[V_QUERY_REVENUE\Revenue Splits\Designation].ID as [Designation ID],
+	[V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR] as [FY],
+	sum([V_QUERY_REVENUE\Revenue Splits].[AMOUNT]) as [Revenue],
+	[V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID] as [Application Details\Base currency ID]
+from [dbo].[V_QUERY_REVENUE] as [V_QUERY_REVENUE]
+inner join [dbo].[V_QUERY_REVENUESPLIT] as [V_QUERY_REVENUE\Revenue Splits] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Revenue Splits].[REVENUEID]
+inner join [dbo].[V_QUERY_DESIGNATION] as [V_QUERY_REVENUE\Revenue Splits\Designation] on [V_QUERY_REVENUE\Revenue Splits].[DESIGNATIONID] = [V_QUERY_REVENUE\Revenue Splits\Designation].[ID]
+inner join [dbo].[USR_V_QUERY_REVENUEITEMS] as [V_QUERY_REVENUE\Heifer Gifts] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Heifer Gifts].[ID]
+left outer join [dbo].[V_QUERY_ATTRIBUTE89662FAC4D144150B184F91503B51AAA] as [V_QUERY_REVENUE\Agresso - Award Number Attribute] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Agresso - Award Number Attribute].[ID]
+where [V_QUERY_REVENUE\Revenue Splits].[GLREVENUECATEGORYMAPPINGID] in (N'20ad98dc-4d7e-446b-a15d-965c8e1f2c16', N'de56f821-01b0-42ae-95a1-0c1f0847b083')
+ and  [V_QUERY_REVENUE\Revenue Splits\Designation].id = @DESIGNATIONID
+ and FISCALYEAR='2019'
+/*SpecificDate*/
+and ([V_QUERY_REVENUE].[DATE] >= '2018-07-01T00:00:00.000') 
+and ([V_QUERY_REVENUE].[DATE] < '2019-07-01T00:00:00.000') 
+ and ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUEID] = N'ca162a9a-9e3f-4bd1-af6c-98c4437817d4'
+ or ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] is null or [V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] = ''))
+group by [V_QUERY_REVENUE\Revenue Splits\Designation].[USERID],[V_QUERY_REVENUE\Revenue Splits\Designation].ID, [V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR], [V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID]
+--order by [Lookup ID] asc
+   ) as Table1
+ )
+where id = @BUDGETID
+
+update usr_heiferbudgetstage
+set REVENUE_2020 =
+ (
+   select revenue from 
+   (
+     select distinct	[V_QUERY_REVENUE\Revenue Splits\Designation].[USERID] as [Lookup ID],
+	[V_QUERY_REVENUE\Revenue Splits\Designation].ID as [Designation ID],
+	[V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR] as [FY],
+	sum([V_QUERY_REVENUE\Revenue Splits].[AMOUNT]) as [Revenue],
+	[V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID] as [Application Details\Base currency ID]
+from [dbo].[V_QUERY_REVENUE] as [V_QUERY_REVENUE]
+inner join [dbo].[V_QUERY_REVENUESPLIT] as [V_QUERY_REVENUE\Revenue Splits] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Revenue Splits].[REVENUEID]
+inner join [dbo].[V_QUERY_DESIGNATION] as [V_QUERY_REVENUE\Revenue Splits\Designation] on [V_QUERY_REVENUE\Revenue Splits].[DESIGNATIONID] = [V_QUERY_REVENUE\Revenue Splits\Designation].[ID]
+inner join [dbo].[USR_V_QUERY_REVENUEITEMS] as [V_QUERY_REVENUE\Heifer Gifts] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Heifer Gifts].[ID]
+left outer join [dbo].[V_QUERY_ATTRIBUTE89662FAC4D144150B184F91503B51AAA] as [V_QUERY_REVENUE\Agresso - Award Number Attribute] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Agresso - Award Number Attribute].[ID]
+where [V_QUERY_REVENUE\Revenue Splits].[GLREVENUECATEGORYMAPPINGID] in (N'20ad98dc-4d7e-446b-a15d-965c8e1f2c16', N'de56f821-01b0-42ae-95a1-0c1f0847b083')
+ and  [V_QUERY_REVENUE\Revenue Splits\Designation].id = @DESIGNATIONID
+ and FISCALYEAR='2020'
+/*SpecificDate*/
+and ([V_QUERY_REVENUE].[DATE] >= '2019-07-01T00:00:00.000') 
+and ([V_QUERY_REVENUE].[DATE] < '2020-07-01T00:00:00.000') 
+ and ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUEID] = N'ca162a9a-9e3f-4bd1-af6c-98c4437817d4'
+ or ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] is null or [V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] = ''))
+group by [V_QUERY_REVENUE\Revenue Splits\Designation].[USERID],[V_QUERY_REVENUE\Revenue Splits\Designation].ID, [V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR], [V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID]
+--order by [Lookup ID] asc
+   ) as Table1
+ )
+where id = @BUDGETID
+
+update usr_heiferbudgetstage
+set REVENUE_2021 =
+ (
+   select revenue from 
+   (
+     select distinct	[V_QUERY_REVENUE\Revenue Splits\Designation].[USERID] as [Lookup ID],
+	[V_QUERY_REVENUE\Revenue Splits\Designation].ID as [Designation ID],
+	[V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR] as [FY],
+	sum([V_QUERY_REVENUE\Revenue Splits].[AMOUNT]) as [Revenue],
+	[V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID] as [Application Details\Base currency ID]
+from [dbo].[V_QUERY_REVENUE] as [V_QUERY_REVENUE]
+inner join [dbo].[V_QUERY_REVENUESPLIT] as [V_QUERY_REVENUE\Revenue Splits] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Revenue Splits].[REVENUEID]
+inner join [dbo].[V_QUERY_DESIGNATION] as [V_QUERY_REVENUE\Revenue Splits\Designation] on [V_QUERY_REVENUE\Revenue Splits].[DESIGNATIONID] = [V_QUERY_REVENUE\Revenue Splits\Designation].[ID]
+inner join [dbo].[USR_V_QUERY_REVENUEITEMS] as [V_QUERY_REVENUE\Heifer Gifts] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Heifer Gifts].[ID]
+left outer join [dbo].[V_QUERY_ATTRIBUTE89662FAC4D144150B184F91503B51AAA] as [V_QUERY_REVENUE\Agresso - Award Number Attribute] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Agresso - Award Number Attribute].[ID]
+where [V_QUERY_REVENUE\Revenue Splits].[GLREVENUECATEGORYMAPPINGID] in (N'20ad98dc-4d7e-446b-a15d-965c8e1f2c16', N'de56f821-01b0-42ae-95a1-0c1f0847b083')
+ and  [V_QUERY_REVENUE\Revenue Splits\Designation].id = @DESIGNATIONID
+ and FISCALYEAR='2021'
+/*SpecificDate*/
+and ([V_QUERY_REVENUE].[DATE] >= '2020-07-01T00:00:00.000') 
+and ([V_QUERY_REVENUE].[DATE] < '2021-07-01T00:00:00.000') 
+ and ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUEID] = N'ca162a9a-9e3f-4bd1-af6c-98c4437817d4'
+ or ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] is null or [V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] = ''))
+group by [V_QUERY_REVENUE\Revenue Splits\Designation].[USERID],[V_QUERY_REVENUE\Revenue Splits\Designation].ID, [V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR], [V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID]
+--order by [Lookup ID] asc
+   ) as Table1
+ )
+where id = @BUDGETID
+
+update usr_heiferbudgetstage
+set REVENUE_2022 =
+ (
+   select revenue from 
+   (
+     select distinct	[V_QUERY_REVENUE\Revenue Splits\Designation].[USERID] as [Lookup ID],
+	[V_QUERY_REVENUE\Revenue Splits\Designation].ID as [Designation ID],
+	[V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR] as [FY],
+	sum([V_QUERY_REVENUE\Revenue Splits].[AMOUNT]) as [Revenue],
+	[V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID] as [Application Details\Base currency ID]
+from [dbo].[V_QUERY_REVENUE] as [V_QUERY_REVENUE]
+inner join [dbo].[V_QUERY_REVENUESPLIT] as [V_QUERY_REVENUE\Revenue Splits] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Revenue Splits].[REVENUEID]
+inner join [dbo].[V_QUERY_DESIGNATION] as [V_QUERY_REVENUE\Revenue Splits\Designation] on [V_QUERY_REVENUE\Revenue Splits].[DESIGNATIONID] = [V_QUERY_REVENUE\Revenue Splits\Designation].[ID]
+inner join [dbo].[USR_V_QUERY_REVENUEITEMS] as [V_QUERY_REVENUE\Heifer Gifts] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Heifer Gifts].[ID]
+left outer join [dbo].[V_QUERY_ATTRIBUTE89662FAC4D144150B184F91503B51AAA] as [V_QUERY_REVENUE\Agresso - Award Number Attribute] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Agresso - Award Number Attribute].[ID]
+where [V_QUERY_REVENUE\Revenue Splits].[GLREVENUECATEGORYMAPPINGID] in (N'20ad98dc-4d7e-446b-a15d-965c8e1f2c16', N'de56f821-01b0-42ae-95a1-0c1f0847b083')
+ and  [V_QUERY_REVENUE\Revenue Splits\Designation].id = @DESIGNATIONID
+ and FISCALYEAR='2022'
+/*SpecificDate*/
+and ([V_QUERY_REVENUE].[DATE] >= '2021-07-01T00:00:00.000') 
+and ([V_QUERY_REVENUE].[DATE] < '2022-07-01T00:00:00.000') 
+ and ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUEID] = N'ca162a9a-9e3f-4bd1-af6c-98c4437817d4'
+ or ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] is null or [V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] = ''))
+group by [V_QUERY_REVENUE\Revenue Splits\Designation].[USERID],[V_QUERY_REVENUE\Revenue Splits\Designation].ID, [V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR], [V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID]
+--order by [Lookup ID] asc
+   ) as Table1
+ )
+where id = @BUDGETID
+
+update usr_heiferbudgetstage
+set REVENUE_2023 =
+ (
+   select revenue from 
+   (
+     select distinct	[V_QUERY_REVENUE\Revenue Splits\Designation].[USERID] as [Lookup ID],
+	[V_QUERY_REVENUE\Revenue Splits\Designation].ID as [Designation ID],
+	[V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR] as [FY],
+	sum([V_QUERY_REVENUE\Revenue Splits].[AMOUNT]) as [Revenue],
+	[V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID] as [Application Details\Base currency ID]
+from [dbo].[V_QUERY_REVENUE] as [V_QUERY_REVENUE]
+inner join [dbo].[V_QUERY_REVENUESPLIT] as [V_QUERY_REVENUE\Revenue Splits] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Revenue Splits].[REVENUEID]
+inner join [dbo].[V_QUERY_DESIGNATION] as [V_QUERY_REVENUE\Revenue Splits\Designation] on [V_QUERY_REVENUE\Revenue Splits].[DESIGNATIONID] = [V_QUERY_REVENUE\Revenue Splits\Designation].[ID]
+inner join [dbo].[USR_V_QUERY_REVENUEITEMS] as [V_QUERY_REVENUE\Heifer Gifts] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Heifer Gifts].[ID]
+left outer join [dbo].[V_QUERY_ATTRIBUTE89662FAC4D144150B184F91503B51AAA] as [V_QUERY_REVENUE\Agresso - Award Number Attribute] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Agresso - Award Number Attribute].[ID]
+where [V_QUERY_REVENUE\Revenue Splits].[GLREVENUECATEGORYMAPPINGID] in (N'20ad98dc-4d7e-446b-a15d-965c8e1f2c16', N'de56f821-01b0-42ae-95a1-0c1f0847b083')
+ and  [V_QUERY_REVENUE\Revenue Splits\Designation].id = @DESIGNATIONID
+ and FISCALYEAR='2023'
+/*SpecificDate*/
+and ([V_QUERY_REVENUE].[DATE] >= '2022-07-01T00:00:00.000') 
+and ([V_QUERY_REVENUE].[DATE] < '2023-07-01T00:00:00.000') 
+ and ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUEID] = N'ca162a9a-9e3f-4bd1-af6c-98c4437817d4'
+ or ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] is null or [V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] = ''))
+group by [V_QUERY_REVENUE\Revenue Splits\Designation].[USERID],[V_QUERY_REVENUE\Revenue Splits\Designation].ID, [V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR], [V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID]
+--order by [Lookup ID] asc
+   ) as Table1
+ )
+where id = @BUDGETID
+
+update usr_heiferbudgetstage
+set REVENUE_2024 =
+ (
+   select revenue from 
+   (
+     select distinct	[V_QUERY_REVENUE\Revenue Splits\Designation].[USERID] as [Lookup ID],
+	[V_QUERY_REVENUE\Revenue Splits\Designation].ID as [Designation ID],
+	[V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR] as [FY],
+	sum([V_QUERY_REVENUE\Revenue Splits].[AMOUNT]) as [Revenue],
+	[V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID] as [Application Details\Base currency ID]
+from [dbo].[V_QUERY_REVENUE] as [V_QUERY_REVENUE]
+inner join [dbo].[V_QUERY_REVENUESPLIT] as [V_QUERY_REVENUE\Revenue Splits] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Revenue Splits].[REVENUEID]
+inner join [dbo].[V_QUERY_DESIGNATION] as [V_QUERY_REVENUE\Revenue Splits\Designation] on [V_QUERY_REVENUE\Revenue Splits].[DESIGNATIONID] = [V_QUERY_REVENUE\Revenue Splits\Designation].[ID]
+inner join [dbo].[USR_V_QUERY_REVENUEITEMS] as [V_QUERY_REVENUE\Heifer Gifts] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Heifer Gifts].[ID]
+left outer join [dbo].[V_QUERY_ATTRIBUTE89662FAC4D144150B184F91503B51AAA] as [V_QUERY_REVENUE\Agresso - Award Number Attribute] on [V_QUERY_REVENUE].[ID] = [V_QUERY_REVENUE\Agresso - Award Number Attribute].[ID]
+where [V_QUERY_REVENUE\Revenue Splits].[GLREVENUECATEGORYMAPPINGID] in (N'20ad98dc-4d7e-446b-a15d-965c8e1f2c16', N'de56f821-01b0-42ae-95a1-0c1f0847b083')
+ and  [V_QUERY_REVENUE\Revenue Splits\Designation].id = @DESIGNATIONID
+ and FISCALYEAR='2024'
+/*SpecificDate*/
+and ([V_QUERY_REVENUE].[DATE] >= '2023-07-01T00:00:00.000') 
+and ([V_QUERY_REVENUE].[DATE] < '2024-07-01T00:00:00.000') 
+ and ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUEID] = N'ca162a9a-9e3f-4bd1-af6c-98c4437817d4'
+ or ([V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] is null or [V_QUERY_REVENUE\Agresso - Award Number Attribute].[VALUE] = ''))
+group by [V_QUERY_REVENUE\Revenue Splits\Designation].[USERID],[V_QUERY_REVENUE\Revenue Splits\Designation].ID, [V_QUERY_REVENUE\Heifer Gifts].[FISCALYEAR], [V_QUERY_REVENUE\Revenue Splits].[BASECURRENCYID]
+--order by [Lookup ID] asc
+   ) as Table1
+ )
+where id = @BUDGETID
+
+        set @NUMBEREDITED = @NUMBEREDITED + 1
+		    set @I = @I + 1        
+	  end
+    --END LOOPING THROUGH TABLE DEFINED ABOVE
+    
+-----------------------------------------------------------------------
+--Begin Modify fields that don't require looping through individual records -
+-----------------------------------------------------------------------
+-- handle RTBR_YYYY fields for all years
+-- RTBR_2014 = IIf([FY2014-Revenue] Is Not Null,[2014-Total]-[2014-Revenue],[2014-Total])
+update usr_heiferbudgetstage set 
+ RTBR_2014 = (select TOTAL_2014 - isnull(REVENUE_2014,0))
+,RTBR_2015 = (select TOTAL_2015 - isnull(REVENUE_2015,0))
+,RTBR_2016 = (select TOTAL_2016 - isnull(REVENUE_2016,0))
+,RTBR_2017 = (select TOTAL_2017 - isnull(REVENUE_2017,0))
+,RTBR_2018 = (select TOTAL_2018 - isnull(REVENUE_2018,0))
+,RTBR_2019 = (select TOTAL_2019 - isnull(REVENUE_2019,0))
+,RTBR_2020 = (select TOTAL_2020 - isnull(REVENUE_2020,0))
+,RTBR_2021 = (select TOTAL_2021 - isnull(REVENUE_2021,0))
+,RTBR_2022 = (select TOTAL_2022 - isnull(REVENUE_2022,0))
+,RTBR_2023 = (select TOTAL_2023 - isnull(REVENUE_2023,0))
+,RTBR_2024 = (select TOTAL_2024 - isnull(REVENUE_2024,0))
+
+-- handle RUNNING_YYYY fields for all years (must start with 2015 since it uses previous years RTBR and table only goes back to 2014
+-- RUNNING_2015 = IIf([2014-RTBR]>0,[2015-RTBR],([2015-RTBR]+[2014-RTBR]))
+-- test change to use previous year TOTAL_RTBR_YYYY field in calc.  TOTAL_RTBR_YYYY starts with 2017
+--update usr_heiferbudgetstage set
+-- RUNNING_2015 = (select case when RTBR_2014 > 0 then RTBR_2015 else RTBR_2015 + RTBR_2014 end)
+--,RUNNING_2016 = (select case when RTBR_2015 > 0 then RTBR_2016 else RTBR_2016 + RTBR_2015 end)
+--,RUNNING_2017 = (select case when RTBR_2016 > 0 then RTBR_2017 else RTBR_2017 + RTBR_2016 end)
+--,RUNNING_2018 = (select case when RTBR_2017 > 0 then RTBR_2018 else RTBR_2018 + RTBR_2017 end)
+--,RUNNING_2019 = (select case when RTBR_2018 > 0 then RTBR_2019 else RTBR_2019 + RTBR_2018 end)
+--,RUNNING_2020 = (select case when RTBR_2019 > 0 then RTBR_2020 else RTBR_2020 + RTBR_2019 end)
+--,RUNNING_2021 = (select case when RTBR_2020 > 0 then RTBR_2021 else RTBR_2021 + RTBR_2020 end)
+--,RUNNING_2022 = (select case when RTBR_2021 > 0 then RTBR_2022 else RTBR_2022 + RTBR_2021 end)
+--,RUNNING_2023 = (select case when RTBR_2022 > 0 then RTBR_2023 else RTBR_2023 + RTBR_2022 end)
+--,RUNNING_2024 = (select case when RTBR_2023 > 0 then RTBR_2024 else RTBR_2024 + RTBR_2023 end)
+
+update usr_heiferbudgetstage set
+ RUNNING_2015 = (select case when RTBR_2014 > 0 then RTBR_2015 else RTBR_2015 + RTBR_2014 end)
+,RUNNING_2016 = (select case when RTBR_2015 > 0 then RTBR_2016 else RTBR_2016 + RTBR_2015 end)
+,RUNNING_2017 = (select case when RTBR_2016 > 0 then RTBR_2017 else RTBR_2017 + RTBR_2016 end)
+,RUNNING_2018 = (select case when RTBR_2017 > 0 then RTBR_2018 else RTBR_2018 + TOTAL_RTBR_2017 end)
+,RUNNING_2019 = (select case when RTBR_2018 > 0 then RTBR_2019 else RTBR_2019 + TOTAL_RTBR_2018 end)
+,RUNNING_2020 = (select case when RTBR_2019 > 0 then RTBR_2020 else RTBR_2020 + TOTAL_RTBR_2019 end)
+,RUNNING_2021 = (select case when RTBR_2020 > 0 then RTBR_2021 else RTBR_2021 + TOTAL_RTBR_2020 end)
+,RUNNING_2022 = (select case when RTBR_2021 > 0 then RTBR_2022 else RTBR_2022 + TOTAL_RTBR_2021 end)
+,RUNNING_2023 = (select case when RTBR_2022 > 0 then RTBR_2023 else RTBR_2023 + TOTAL_RTBR_2022 end)
+,RUNNING_2024 = (select case when RTBR_2023 > 0 then RTBR_2024 else RTBR_2024 + TOTAL_RTBR_2023 end)
+
+----------------------------------------------------------------------------
+-- End Modify fields that don't require looping through individual records -
+----------------------------------------------------------------------------   
+
+----------------------------------------------------------------------------
+-- BEGIN Loop through query for RESERVATIONS_YYYY                          -
+----------------------------------------------------------------------------
+
+    declare @RESERVATIONS table
+    (
+      PK int identity(1,1),  
+      LOOKUPID nvarchar(20),
+      RESERVATIONAMOUNT money
+    )
+    
+    set @I = 1
+    
+    insert into @RESERVATIONS
+	    select  [V_QUERY_CAMPAIGN\Designations\Designation].[USERID] as [Lookup ID],
+	    sum([V_QUERY_CAMPAIGN\Priorities].[GOAL]) as [Amount]
+      --	[V_QUERY_CAMPAIGN\Priorities].[CAMPAIGNPRIORITYTYPECODE] as [Priorities\Type],
+      --	[V_QUERY_CAMPAIGN\Priorities].[BASECURRENCYID] as [Priorities\Base currency ID]
+      from [dbo].[V_QUERY_CAMPAIGN] as [V_QUERY_CAMPAIGN]
+      left outer join [dbo].[V_QUERY_DESIGNATIONCAMPAIGN] as [V_QUERY_CAMPAIGN\Designations] on [V_QUERY_CAMPAIGN].[ID] = [V_QUERY_CAMPAIGN\Designations].[CAMPAIGNID]
+      left outer join [dbo].[V_QUERY_DESIGNATION] as [V_QUERY_CAMPAIGN\Designations\Designation] on [V_QUERY_CAMPAIGN\Designations].[DESIGNATIONID] = [V_QUERY_CAMPAIGN\Designations\Designation].[ID]
+      left outer join [dbo].[V_QUERY_CAMPAIGNPRIORITY] as [V_QUERY_CAMPAIGN\Priorities] on [V_QUERY_CAMPAIGN].[ID] = [V_QUERY_CAMPAIGN\Priorities].[CAMPAIGNID]
+      where ([V_QUERY_CAMPAIGN\Priorities].[GOAL] is not null)
+      group by [V_QUERY_CAMPAIGN\Designations\Designation].[USERID], [V_QUERY_CAMPAIGN\Priorities].[CAMPAIGNPRIORITYTYPECODE], [V_QUERY_CAMPAIGN\Priorities].[BASECURRENCYID]
+  
+    
+    declare @LOOKUPID nvarchar(20)
+    declare @RESERVATIONAMOUNT money    
+        
+    select @I_MAX = count(*) from @RESERVATIONS
+    
+		--BEGIN LOOPING THROUGH TABLE DEFINED ABOVE 
+    while @I <= @I_MAX
+	  begin 		
+			  select 
+          @LOOKUPID = LOOKUPID,
+          @RESERVATIONAMOUNT = RESERVATIONAMOUNT
+        from 
+          @RESERVATIONS 
+        where 
+          PK = @I
+
+        update usr_heiferbudgetstage set RESERVATIONS_2017 = 0 where DESIGNATIONID = (select id from designation where userid=@LOOKUPID)
+        update usr_heiferbudgetstage set RESERVATIONS_2018 = isnull(@RESERVATIONAMOUNT,0) where DESIGNATIONID = (select id from designation where userid=@LOOKUPID)
+        update usr_heiferbudgetstage set RESERVATIONS_2019 = 0 where DESIGNATIONID = (select id from designation where userid=@LOOKUPID)
+        update usr_heiferbudgetstage set RESERVATIONS_2020 = 0 where DESIGNATIONID = (select id from designation where userid=@LOOKUPID)
+        update usr_heiferbudgetstage set RESERVATIONS_2021 = 0 where DESIGNATIONID = (select id from designation where userid=@LOOKUPID)
+        update usr_heiferbudgetstage set RESERVATIONS_2022 = 0 where DESIGNATIONID = (select id from designation where userid=@LOOKUPID)
+        update usr_heiferbudgetstage set RESERVATIONS_2023 = 0 where DESIGNATIONID = (select id from designation where userid=@LOOKUPID)
+        update usr_heiferbudgetstage set RESERVATIONS_2024 = 0 where DESIGNATIONID = (select id from designation where userid=@LOOKUPID)
+
+		    set @I = @I + 1  
+    end
+
+----------------------------------------------------------------------------
+-- END Loop through query for RESERVATIONS_YYYY                          -
+----------------------------------------------------------------------------
+
+----------------------------------------------------------------------------
+-- BEGIN Loop through query for RESREVENUE_YYYY                          -
+----------------------------------------------------------------------------
+
+    declare @RESREVENUE table
+    (
+      PK int identity(1,1),  
+      LOOKUPID nvarchar(20),
+      RESREVENUEAMOUNT money
+    )
+    
+    set @I = 1
+    
+    insert into @RESREVENUE
+      select  [V_QUERY_REVENUESPLIT\Designation].[USERID] as [Lookup ID],
+	    sum([V_QUERY_REVENUESPLIT].[AMOUNT]) as [Amount]
+	    --[V_QUERY_REVENUESPLIT].[BASECURRENCYID] as [Base currency ID]
+      from [dbo].[V_QUERY_REVENUESPLIT] as [V_QUERY_REVENUESPLIT]
+      left outer join [dbo].[V_QUERY_DESIGNATION] as [V_QUERY_REVENUESPLIT\Designation] on [V_QUERY_REVENUESPLIT].[DESIGNATIONID] = [V_QUERY_REVENUESPLIT\Designation].[ID]
+      left outer join [dbo].[V_QUERY_REVENUESPLITCAMPAIGN] as [V_QUERY_REVENUESPLIT\Revenue Campaigns] on [V_QUERY_REVENUESPLIT].[ID] = [V_QUERY_REVENUESPLIT\Revenue Campaigns].[REVENUESPLITID]
+      where ([V_QUERY_REVENUESPLIT\Revenue Campaigns].[CAMPAIGNSUBPRIORITYNAMECODEID_TRANSLATION] is not null and [V_QUERY_REVENUESPLIT\Revenue Campaigns].[CAMPAIGNSUBPRIORITYNAMECODEID_TRANSLATION] <> '')
+      and [V_QUERY_REVENUESPLIT].[GLREVENUECATEGORYMAPPINGID] in (N'20ad98dc-4d7e-446b-a15d-965c8e1f2c16', N'de56f821-01b0-42ae-95a1-0c1f0847b083')
+      group by [V_QUERY_REVENUESPLIT\Designation].[USERID], [V_QUERY_REVENUESPLIT].[BASECURRENCYID]
+  
+    
+    declare @LOOKUPID2 nvarchar(20)
+    declare @RESREVENUEAMOUNT money    
+        
+    select @I_MAX = count(*) from @RESREVENUE
+    
+		--BEGIN LOOPING THROUGH TABLE DEFINED ABOVE 
+    while @I <= @I_MAX
+	  begin 		
+			  select 
+          @LOOKUPID2 = LOOKUPID,
+          @RESREVENUEAMOUNT = RESREVENUEAMOUNT
+        from 
+          @RESREVENUE 
+        where 
+          PK = @I
+
+        update usr_heiferbudgetstage set RES_REVENUE_2017 = 0 where DESIGNATIONID = (select id from designation where userid=@LOOKUPID2)
+        update usr_heiferbudgetstage set RES_REVENUE_2018 = isnull(@RESREVENUEAMOUNT,0) where DESIGNATIONID = (select id from designation where userid=@LOOKUPID2)
+        update usr_heiferbudgetstage set RES_REVENUE_2019 = 0 where DESIGNATIONID = (select id from designation where userid=@LOOKUPID2)
+        update usr_heiferbudgetstage set RES_REVENUE_2020 = 0 where DESIGNATIONID = (select id from designation where userid=@LOOKUPID2)
+        update usr_heiferbudgetstage set RES_REVENUE_2021 = 0 where DESIGNATIONID = (select id from designation where userid=@LOOKUPID2)
+        update usr_heiferbudgetstage set RES_REVENUE_2022 = 0 where DESIGNATIONID = (select id from designation where userid=@LOOKUPID2)
+        update usr_heiferbudgetstage set RES_REVENUE_2023 = 0 where DESIGNATIONID = (select id from designation where userid=@LOOKUPID2)
+        update usr_heiferbudgetstage set RES_REVENUE_2024 = 0 where DESIGNATIONID = (select id from designation where userid=@LOOKUPID2)
+        
+        --Set RES_REVENUE fields = 0 if reservations for that year have been set to zero
+
+		    set @I = @I + 1  
+    end
+
+----------------------------------------------------------------------------
+-- END Loop through query for RESREVENUE_YYYY                          -
+----------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------
+--Begin Modify fields that don't require looping through individual records -
+-----------------------------------------------------------------------
+-- handle REMAININGRES_YYYY fields for all years
+--  2017-RemainingRes field = [2017-Reservations]-[2017-ResRevenue] 
+update usr_heiferbudgetstage set 
+REMAINING_RES_2017 = 0
+,REMAINING_RES_2018 = (select isnull(RESERVATIONS_2018,0) - isnull(RES_REVENUE_2018,0))
+,REMAINING_RES_2019 = 0
+,REMAINING_RES_2020 = 0
+,REMAINING_RES_2021 = 0
+,REMAINING_RES_2022 = 0
+,REMAINING_RES_2023 = 0
+,REMAINING_RES_2024 = 0
+
+-- handle TOTALRTBR_YYYY fields for all years (must start with 2015 since it uses previous years RTBR and table only goes back to 2014
+-- 2017-TotalRTBR field = IIf([2017-Reservations] Is Not Null,[2017-Running]-[2017-RemainingRes],[2017-Running])
+-- I think we can say if 2017_Reservations Is Not Null or = zero for IIF
+update usr_heiferbudgetstage set
+TOTAL_RTBR_2017 = (select case when isnull(RESERVATIONS_2017,0) <> 0 then isnull(RUNNING_2017,0) - isnull(REMAINING_RES_2017,0) else isnull(RUNNING_2017,0) end)
+,TOTAL_RTBR_2018 = (select case when isnull(RESERVATIONS_2018,0) <> 0 then isnull(RUNNING_2018,0) - isnull(REMAINING_RES_2018,0) else isnull(RUNNING_2018,0) end)
+,TOTAL_RTBR_2019 = (select case when isnull(RESERVATIONS_2019,0) <> 0 then isnull(RUNNING_2019,0) - isnull(REMAINING_RES_2019,0) else isnull(RUNNING_2019,0) end)
+,TOTAL_RTBR_2020 = (select case when isnull(RESERVATIONS_2020,0) <> 0 then isnull(RUNNING_2020,0) - isnull(REMAINING_RES_2020,0) else isnull(RUNNING_2020,0) end)
+,TOTAL_RTBR_2021 = (select case when isnull(RESERVATIONS_2021,0) <> 0 then isnull(RUNNING_2021,0) - isnull(REMAINING_RES_2021,0) else isnull(RUNNING_2021,0) end)
+,TOTAL_RTBR_2022 = (select case when isnull(RESERVATIONS_2022,0) <> 0 then isnull(RUNNING_2022,0) - isnull(REMAINING_RES_2022,0) else isnull(RUNNING_2022,0) end)
+,TOTAL_RTBR_2023 = (select case when isnull(RESERVATIONS_2023,0) <> 0 then isnull(RUNNING_2023,0) - isnull(REMAINING_RES_2023,0) else isnull(RUNNING_2023,0) end)
+,TOTAL_RTBR_2024 = (select case when isnull(RESERVATIONS_2024,0) <> 0 then isnull(RUNNING_2024,0) - isnull(REMAINING_RES_2024,0) else isnull(RUNNING_2024,0) end)
+
+----------------------------------------------------------------------------
+-- End Modify fields that don't require looping through individual records -
+---------------------------------------------------------------------------- 
+
+	end try
+	begin catch
+		exec dbo.USP_RAISE_ERROR;
+		return 1;
+	end catch
+		]]>
+    </CreateProcedureSQL>
+
+    <ParametersFormMetaData>
+      <common:FormMetaData>
+        <common:FormFields>
+          <common:FormField FieldID="FIELD1" Caption="FIELD1" DataType="String" Hidden="true" />
+        </common:FormFields>
+        <common:WebUIComponent>
+          <common:WebUI>
+            <common:DefaultWebUI />
+          </common:WebUI>
+        </common:WebUIComponent>
+      </common:FormMetaData>
+    </ParametersFormMetaData>
+
+  </GlobalChangeSpec>

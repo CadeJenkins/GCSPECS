@@ -1,0 +1,28 @@
+﻿<TableSpec 
+	xmlns="bb_appfx_table"
+	xmlns:common="bb_appfx_commontypes" 
+	ID="b5f9a983-c2a0-4164-aab4-bc2d985cf127"
+	Name="USR_ADDR_TO_DELETE2"
+	Description="USR_ADDR_TO_DELETE2"
+	Author="DSS"
+	Tablename="USR_ADDR_TO_DELETE2"		   
+	>
+
+  <!-- define fields on the table -->
+  <Fields>
+    <NumberField Name="PK" Type="int" >
+      <Identity Increment="1" IsUnique="true"/>
+    </NumberField>
+    <GuidField Name="ADDRID"/>
+  </Fields>
+
+  <!-- define any indexes on the table -->
+  <Indexes>
+    <Index>
+      <IndexFields>
+        <IndexField Name="ADDRID" />
+      </IndexFields>
+    </Index>
+  </Indexes>
+
+</TableSpec>

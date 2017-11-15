@@ -1,0 +1,84 @@
+﻿<GlobalChangeSpec 
+	xmlns="bb_appfx_globalchange"  
+	xmlns:common="bb_appfx_commontypes"
+	ID="0513484f-2dd9-4bd5-8863-a4cbb2cd3ed4"
+	Name="Interaction Dates Current Date Update"
+	Description="Set expected date and actual date = current date for interaction selection"
+	Author="HEIFERNET\khamling"
+	DisplayName="Interaction Dates Current Date Update"
+	GlobalChangeFolder="Interaction"
+	SPName="USR_USP_GLOBALCHANGE_UPDATE_INTERACTIONDATES_CURRENTDATE"
+>
+
+
+    <!-- describe the SP that performs the global change operation -->
+    <CreateProcedureSQL>
+      <![CDATA[
+create procedure dbo.USR_USP_GLOBALCHANGE_UPDATE_INTERACTIONDATES_CURRENTDATE
+(
+	@CHANGEAGENTID uniqueidentifier = null,
+	@ASOF as datetime = null,
+	@NUMBERADDED int = 0 output,
+	@NUMBEREDITED int = 0 output,
+	@NUMBERDELETED int = 0 output,
+  @INTERACTIONSELECTIONID UNIQUEIDENTIFIER
+)
+as			
+	set nocount off;
+	
+	declare @CURRENTDATE datetime
+	set @CURRENTDATE = cast(getdate() As Date);
+	set @NUMBERADDED = 0;
+	set @NUMBEREDITED = 0;
+	set @NUMBERDELETED = 0; 
+	
+	if @CHANGEAGENTID is null
+		exec dbo.USP_CHANGEAGENT_GETORCREATECHANGEAGENT @CHANGEAGENTID output;
+					
+	begin try
+		-- do the global change operation here, and set @NUMBERADDED, @NUMBEREDITED, and/or @NUMBERDELETED as appropriate
+		-- Table to hold selection ids
+    DECLARE @INTERACTIONSELECTION TABLE (id UNIQUEIDENTIFIER PRIMARY KEY); 
+
+    INSERT INTO @INTERACTIONSELECTION 
+    SELECT id 
+    FROM   dbo.Ufn_idsetreader_getresults_guid(@INTERACTIONSELECTIONID) 	
+
+      -- Update interaction expecteddate
+      update
+        interaction
+      set
+        expecteddate=@CURRENTDATE,
+        actualdate=@CURRENTDATE
+      from
+        interaction
+        inner join @INTERACTIONSELECTION SelectionResults on SelectionResults.ID = interaction.id
+ 
+    set @NUMBEREDITED = @@rowcount             
+          
+	end try
+	
+	begin catch
+		exec dbo.USP_RAISE_ERROR;
+		return 1;
+	end catch
+		]]>
+    </CreateProcedureSQL>
+
+    <ParametersFormMetaData>
+      <common:FormMetaData>
+        <common:FormFields>
+          <common:FormField FieldID="INTERACTIONSELECTIONID" Caption="Interaction Selection" DataType="Guid" Required="true" >
+            <common:SearchList SearchListID="1F0E603C-1C55-4E1E-8218-BDB877B2CBE8">
+            </common:SearchList>
+          </common:FormField>
+        </common:FormFields>
+        <common:WebUIComponent>
+          <common:WebUI>
+            <common:DefaultWebUI />
+          </common:WebUI>
+        </common:WebUIComponent>
+      </common:FormMetaData>
+    </ParametersFormMetaData>
+
+  </GlobalChangeSpec>

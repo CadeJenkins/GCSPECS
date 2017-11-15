@@ -1,0 +1,69 @@
+﻿<GlobalChangeSpec 
+	xmlns="bb_appfx_globalchange"  
+	xmlns:common="bb_appfx_commontypes"
+	ID="3736057f-b1a1-4f56-be3c-a64986344630"
+	Name="Update MSource Source Code Global Change"
+	Description="Set Source Codes where null on USR_MSOURCE table"
+	Author="HEIFERNET\khamling"
+	DisplayName="Update MSource Source Code Global Change"
+	GlobalChangeFolder="MSource"
+	SPName="USR_USP_GLOBALCHANGE_UPDATE_MSOURCE_SOURCECODE"
+>
+
+	<!-- describe the SP that performs the global change operation -->
+	<CreateProcedureSQL>
+		<![CDATA[
+create procedure dbo.USR_USP_GLOBALCHANGE_UPDATE_MSOURCE_SOURCECODE
+(
+	@CHANGEAGENTID uniqueidentifier = null,
+	@ASOF as datetime = null,
+	@NUMBERADDED int = 0 output,
+	@NUMBEREDITED int = 0 output,
+	@NUMBERDELETED int = 0 output,
+	@SOURCECODE nvarchar(20) = null
+)
+as			
+	set nocount off;
+	
+	declare @CURRENTDATE datetime
+	set @CURRENTDATE = getdate();
+	set @NUMBERADDED = 0;
+	set @NUMBEREDITED = 0;
+	set @NUMBERDELETED = 0; 
+	
+	if @CHANGEAGENTID is null
+		exec dbo.USP_CHANGEAGENT_GETORCREATECHANGEAGENT @CHANGEAGENTID output;
+					
+	begin try
+		-- do the global change operation here, and set @NUMBERADDED, @NUMBEREDITED, and/or @NUMBERDELETED as appropriate
+		update usr_msource set source_code=@SOURCECODE where isnull(source_code,'') = ''
+     
+    set @NUMBEREDITED = @@rowcount
+     
+	end try
+	
+	begin catch
+		exec dbo.USP_RAISE_ERROR;
+		return 1;
+	end catch
+		]]>
+	</CreateProcedureSQL>
+
+	<ParametersFormMetaData>
+
+		<!-- describe fields on the parameter form, which correspond to parameters on the SP.  Note that system parameters 
+		like the context @CHANGEAGENTID, @ASOF, @NUMBERADDED, @NUMBEREDITED, and @NUMBERDELETED need not be listed. -->
+		<FormMetaData xmlns="bb_appfx_commontypes">
+			<FormFields>
+				<FormField FieldID="SOURCECODE" Caption="Source Code" DataType="String" />
+			</FormFields>
+
+      <common:WebUIComponent>
+        <common:WebUI>
+          <common:DefaultWebUI />
+        </common:WebUI>
+      </common:WebUIComponent>
+		</FormMetaData>
+	</ParametersFormMetaData>
+	
+</GlobalChangeSpec>

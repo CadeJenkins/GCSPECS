@@ -1,0 +1,166 @@
+﻿
+
+  <GlobalChangeSpec xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    ID="617cda81-86bb-4a9a-b906-cf308cef7b50" 
+    Name="Acknowledgement Fields Limit Records Global Change" 
+    Description="Updates the USR_ACKNOWLEDGEMENTFIELDS table for custom acknowledgement fields.  Limit records based on datechanged filter" 
+    Author="HEIFERNET\khamling" SPName="USR_USP_GLOBALCHANGE_ACKNOWLEDGEMENTFIELDS_LIMIT_RECORDS" 
+    DisplayName="Acknowledgement Fields Limit Records Global Change" GlobalChangeFolder="Acknowledgements" 
+    xmlns="bb_appfx_globalchange">
+    <CreateProcedureSQL>
+
+      create procedure dbo.USR_USP_GLOBALCHANGE_ACKNOWLEDGEMENTFIELDS_LIMIT_RECORDS
+      (
+      @CHANGEAGENTID uniqueidentifier = null,
+      @ASOF as datetime = null,
+      @NUMBERADDED int = 0 output,
+      @NUMBEREDITED int = 0 output,
+      @NUMBERDELETED int = 0 output
+      )
+      as
+      set nocount off;
+
+      set @NUMBERADDED = 0;
+      set @NUMBEREDITED = 0;
+      set @NUMBERDELETED = 0;
+
+      begin try
+      -- do the global change operation here, and set @NUMBERADDED, @NUMBEREDITED, and/or @NUMBERDELETED as appropriate
+      -- removed nolock hints to avoid any uncommited (dirty) reads. Was causing problem with constraints.
+
+      if  exists (select * from sys.objects where object_id = OBJECT_ID(N'[dbo].[TEMP_REVENUECATALOGLIST]') AND type in (N'U'))
+      drop table dbo.TEMP_REVENUECATALOGLIST;
+
+      create table dbo.TEMP_REVENUECATALOGLIST
+      (
+      ID uniqueidentifier NOT NULL,
+      CATALOGITEMID uniqueidentifier NOT NULL,
+      TITLE nvarchar(1000) NULL,
+      PRICE nvarchar(1000) NULL
+      );
+
+      insert into dbo.TEMP_REVENUECATALOGLIST(ID, CATALOGITEMID, TITLE, PRICE)
+SELECT	CR.REVENUEID,cr.catalogitemid, CI.TITLE, sum(CR.QUANTITY*CR.PRICE) as PRICE
+FROM dbo.USR_CATALOGREVENUE CR 
+--INNER JOIN USR_CATALOGITEMATTRIBUTE CIM ON CR.CATALOGITEMATTRIBUTEID = CIM.ID 
+	  INNER JOIN USR_CATALOGITEM CI ON CR.CATALOGITEMID = CI.ID
+inner join financialtransaction ft on ft.id = cr.revenueid
+and ft.datechanged>=(getdate()-600)  --Made this range go back slightly further
+group by CR.REVENUEID,cr.catalogitemid, CI.TITLE
+
+      --clear the table
+      --truncate table USR_ACKNOWLEDGEMENTFIELDS;
+      --khamling
+      --delete from usr_acknowledgementfields where id in (select id from financialtransaction where datechanged >= (getdate()-560) )
+
+
+      if  exists (select * from sys.objects where object_id = OBJECT_ID(N'[dbo].[TEMP_ACKNOWLEDGEMENTFIELDS]') AND type in (N'U'))
+      drop table dbo.TEMP_ACKNOWLEDGEMENTFIELDS;
+
+      create table dbo.TEMP_ACKNOWLEDGEMENTFIELDS
+      (
+      ID uniqueidentifier NOT NULL,
+      DESIGNATIONSUMMARY nvarchar(2000) NULL,
+      TRIBUTETEXT nvarchar(1000) NULL,
+      CATALOGLIST nvarchar(1000) NULL
+      );
+
+      insert into dbo.TEMP_ACKNOWLEDGEMENTFIELDS(ID, DESIGNATIONSUMMARY, TRIBUTETEXT, CATALOGLIST)
+
+      select distinct
+      R.ID as REVENUEID,
+
+      isnull(replace(substring(reverse(substring(reverse((
+      (select convert(nvarchar(max), NAME) + ', ' from REVENUESPLIT_EXT RSE INNER JOIN FINANCIALTRANSACTIONLINEITEM FTOL ON FTOL.ID = RSE.ID LEFT JOIN DESIGNATION D ON RSE.DESIGNATIONID = D.ID	where FTOL.FINANCIALTRANSACTIONID = R.ID
+      FOR XML PATH('')))), 3, 2000)), 1, 255), '&amp;amp;', '&amp;'), '')
+      as DesignationSummary,
+
+      (select top 1
+      isnull((replace(substring(reverse(substring(reverse((
+      (select convert(nvarchar(max), T.TRIBUTETEXT) + ', '
+      from REVENUETRIBUTE RT
+      left join TRIBUTE T on RT.TRIBUTEID = T.ID
+      where RT.REVENUEID = R.ID
+      FOR XML PATH('')))), 3, 2000)), 1, 255), '&amp;amp;', '&amp;')), '')
+      ) as TributeText,
+
+
+      --ISNULL(
+      --reverse(substring(reverse(
+      --(SELECT ( SELECT CatalogItem + ', '
+      --FROM (SELECT	CR.REVENUEID RevenueSystemID, (CI.TITLE + ' (' + CAST((CR.QUANTITY * CR.PRICE) as VARCHAR(50)) + ')') CatalogItem FROM dbo.USR_CATALOGREVENUE CR INNER JOIN USR_CATALOGITEMATTRIBUTE CIM ON CR.CATALOGITEMATTRIBUTEID = CIM.ID INNER JOIN USR_CATALOGITEM CI ON CIM.CATALOGITEMID = CI.ID) CR2
+      --WHERE CR2.RevenueSystemID = CR1.RevenueSystemID
+      --ORDER BY CatalogItem
+      --FOR XML PATH('') ) AS CatalogItemList
+      --FROM (SELECT	CR.REVENUEID RevenueSystemID, (CI.TITLE + ' (' + CAST((CR.QUANTITY * CR.PRICE) as VARCHAR(50)) + ')') CatalogItem FROM dbo.USR_CATALOGREVENUE CR INNER JOIN USR_CATALOGITEMATTRIBUTE CIM ON CR.CATALOGITEMATTRIBUTEID = CIM.ID INNER JOIN USR_CATALOGITEM CI ON CIM.CATALOGITEMID = CI.ID
+      --where CR.REVENUEID = R.ID
+      --) CR1
+      --GROUP BY RevenueSystemID)
+      --), 3, 1000))
+      --, '')
+      --AS CatalogList,
+      
+      
+      ISNULL(
+      reverse(substring(reverse(
+      (SELECT ( SELECT CatalogItem + ', '
+      FROM (SELECT	CR.ID RevenueSystemID, (CI.TITLE + ' (' + CAST((CR.PRICE) as VARCHAR(50)) + ')') CatalogItem 
+	    FROM 
+	    TEMP_REVENUECATALOGLIST CR 
+	    --INNER JOIN USR_CATALOGITEMATTRIBUTE CIM ON CR.CATALOGITEMATTRIBUTEID = CIM.ID 
+	    INNER JOIN USR_CATALOGITEM CI ON CR.CATALOGITEMID = CI.ID) CR2
+      WHERE CR2.RevenueSystemID = CR1.RevenueSystemID
+      --ORDER BY cr2.CatalogItem
+      FOR XML PATH('') ) AS CatalogItemList
+      FROM (SELECT	CR.ID RevenueSystemID, (CI.TITLE + ' (' + CAST((CR.PRICE) as VARCHAR(50)) + ')') CatalogItem 
+	    FROM 
+	    TEMP_REVENUECATALOGLIST CR 
+	    --INNER JOIN USR_CATALOGITEMATTRIBUTE CIM ON CR.CATALOGITEMATTRIBUTEID = CIM.ID 
+	    INNER JOIN USR_CATALOGITEM CI ON CR.CATALOGITEMID = CI.ID
+      where CR.ID = R.ID
+      ) CR1
+      GROUP BY RevenueSystemID)
+      ), 3, 1000))
+      , '')
+      AS CatalogList
+
+      from
+      dbo.FINANCIALTRANSACTION R
+      inner join FINANCIALTRANSACTIONLINEITEM RS on RS.FINANCIALTRANSACTIONID = R.ID
+      inner join revenuesplit_ext RSE on rs.id = rse.id
+      --khamling added
+      where r.datechanged>=(getdate()-560)
+
+      --khamling test to prevent duplicate key error
+      delete from USR_ACKNOWLEDGEMENTFIELDS where ID in (select id from temp_acknowledgementfields)
+
+      insert into USR_ACKNOWLEDGEMENTFIELDS (ID, DESIGNATIONSUMMARY, TRIBUTETEXT, CATALOGLIST)
+      select distinct
+      dbo.TEMP_ACKNOWLEDGEMENTFIELDS.ID,
+      dbo.TEMP_ACKNOWLEDGEMENTFIELDS.DESIGNATIONSUMMARY,
+      dbo.TEMP_ACKNOWLEDGEMENTFIELDS.TRIBUTETEXT,
+      dbo.TEMP_ACKNOWLEDGEMENTFIELDS.CATALOGLIST
+      from
+      dbo.TEMP_ACKNOWLEDGEMENTFIELDS
+      where
+      dbo.TEMP_ACKNOWLEDGEMENTFIELDS.ID in (select dbo.financialtransaction.ID from dbo.financialtransaction)
+      --khamling test to prevent duplicate key error
+      --and TEMP_ACKNOWLEDGEMENTFIELDS.ID not in (select id from usr_acknowledgementfields)
+      ;
+
+      set @NUMBEREDITED = @@ROWCOUNT;
+
+      -- Clear out temp table
+      drop table TEMP_ACKNOWLEDGEMENTFIELDS;
+      drop table TEMP_REVENUECATALOGLIST;
+
+      end try
+
+      begin catch
+      exec dbo.USP_RAISE_ERROR;
+      return 1;
+      end catch
+
+    </CreateProcedureSQL>
+  </GlobalChangeSpec>

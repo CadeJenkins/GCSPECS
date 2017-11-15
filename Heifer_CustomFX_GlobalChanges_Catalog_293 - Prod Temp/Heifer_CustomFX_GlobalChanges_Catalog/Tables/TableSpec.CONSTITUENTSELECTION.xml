@@ -1,0 +1,11 @@
+﻿<TableSpec 
+	xmlns="bb_appfx_table"
+	xmlns:common="bb_appfx_commontypes" 
+	ID="d12087eb-0def-4a58-a773-7316369d55f9"
+	Name="USR_CONSTITUENTSELECTION"
+	Description="USR_CONSTITUENTSELECTION"
+	Author="DSS"
+	Tablename="USR_CONSTITUENTSELECTION"		   
+	>
+
+</TableSpec>

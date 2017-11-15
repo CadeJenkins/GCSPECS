@@ -1,0 +1,81 @@
+﻿  <GlobalChangeSpec
+    xmlns="bb_appfx_globalchange"
+    xmlns:common="bb_appfx_commontypes"
+    ID="7d11a6d6-563b-491c-840b-3e08146ae53e"
+    Name="Merkle CD Link Filename Add Count Zip Global Change"
+    Description="Merkle CD Link Filename Add Count Zip.  Business Process Parameter must = 'FEED - Merkle - Daily CD Link Export'"
+    Author="HEIFERNET\khamling"
+    DisplayName="Merkle CD Link Filename Add Count Zip"
+    GlobalChangeFolder="Auto File Download"
+    SPName="USR_USP_GLOBALCHANGE_MERKLE_FILENAME_ADDCOUNT_ZIP"
+>
+
+    <!-- describe the SP that performs the global change operation -->
+    <CreateProcedureSQL>
+      <![CDATA[
+create procedure dbo.USR_USP_GLOBALCHANGE_MERKLE_FILENAME_ADDCOUNT_ZIP
+(
+	@CHANGEAGENTID uniqueidentifier = null,
+	@ASOF as datetime = null,
+	@NUMBERADDED int = 0 output,
+	@NUMBEREDITED int = 0 output,
+	@NUMBERDELETED int = 0 output,
+	@PATTERN nvarchar(20) = null
+)
+as			
+	set nocount off;
+	
+	declare @CURRENTDATE datetime
+	set @CURRENTDATE = getdate();
+	set @NUMBERADDED = 0;
+	set @NUMBEREDITED = 0;
+	set @NUMBERDELETED = 0; 
+  
+  declare @NUMPROCESSED int = 0;
+  
+  set @NUMPROCESSED = 
+    (
+    select top 1 numberprocessed from businessprocessstatus  
+    where businessprocesscatalogid=(select id from businessprocesscatalog where name ='Export Process')
+    and businessprocessparametersetid =(select id from exportprocess where name = 'FEED - Merkle - Daily CD Link Export')
+    and statuscode=0
+    order by endedon desc
+    )
+	
+	if @CHANGEAGENTID is null
+		exec dbo.USP_CHANGEAGENT_GETORCREATECHANGEAGENT @CHANGEAGENTID output;
+					
+	begin try
+		-- do the global change operation here, and set @NUMBERADDED, @NUMBEREDITED, and/or @NUMBERDELETED as appropriate
+		update usr_zipprocess
+    set filename = replace(filename,@PATTERN,@NUMPROCESSED), destinationpath =  replace(destinationpath,@PATTERN,@NUMPROCESSED)
+    where id = (select id from usr_zipprocess where name = 'FEED - Merkle - Daily CD Link Export')
+
+    set @NUMBEREDITED = @@rowcount
+
+	end try
+	
+	begin catch
+		exec dbo.USP_RAISE_ERROR;
+		return 1;
+	end catch
+		]]>
+    </CreateProcedureSQL>
+
+    <ParametersFormMetaData>
+
+      <!-- describe fields on the parameter form, which correspond to parameters on the SP.  Note that system parameters 
+		like the context @CHANGEAGENTID, @ASOF, @NUMBERADDED, @NUMBEREDITED, and @NUMBERDELETED need not be listed. -->
+      <FormMetaData xmlns="bb_appfx_commontypes">
+        <FormFields>
+          <FormField FieldID="PATTERN" Caption="Pattern to replace with number processed. (For 'FEED - Merkle - Daily CD Link Export' only)" DataType="String" MaxLength="20" />
+        </FormFields>
+        <common:WebUIComponent>
+          <common:WebUI>
+            <common:DefaultWebUI />
+          </common:WebUI>
+        </common:WebUIComponent>
+      </FormMetaData>
+    </ParametersFormMetaData>
+
+  </GlobalChangeSpec>

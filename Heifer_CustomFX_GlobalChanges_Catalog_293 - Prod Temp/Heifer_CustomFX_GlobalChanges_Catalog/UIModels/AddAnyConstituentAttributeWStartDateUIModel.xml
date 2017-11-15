@@ -1,0 +1,10 @@
+﻿<UIModelWizardMetadata>
+  <SpecFileName>AddAnyConstituentAttributeWithStartDate.GlobalChange.xml</SpecFileName>
+  <Namespace></Namespace>
+  <ClassName>AddAnyConstituentAttributeWStartDateUIModel</ClassName>
+  <HtmlInfo GenerateHtml="false">
+    <HtmlFile />
+    <HtmlFolder>htmlforms\</HtmlFolder>
+  </HtmlInfo>
+  <GenerateFromDatabase>false</GenerateFromDatabase>
+</UIModelWizardMetadata>

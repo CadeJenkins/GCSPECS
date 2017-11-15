@@ -1,0 +1,154 @@
+﻿<GlobalChangeSpec 
+	xmlns="bb_appfx_globalchange"  
+	xmlns:common="bb_appfx_commontypes"
+	ID="c38d91b9-f95c-4796-a348-81fb0585b4d3"
+	Name="Update Vendor and Gift Type Global Change"
+	Description="Update Vendor and Gift Type on Revenue"
+	Author="HEIFERNET\khamling"
+	DisplayName="Update Vendor and Gift Type Global Change"
+	GlobalChangeFolder="Revenue"
+	SPName="USP_GLOBALCHANGE_ADD_VENDOR_GIFTTYPE"
+>
+
+	<!-- describe the SP that performs the global change operation -->
+	<CreateProcedureSQL>
+		<![CDATA[
+create procedure dbo.USP_GLOBALCHANGE_ADD_VENDOR_GIFTTYPE
+(
+	@CHANGEAGENTID uniqueidentifier = null,
+	@ASOF as datetime = null,
+	@NUMBERADDED int = 0 output,
+	@NUMBEREDITED int = 0 output,
+	@NUMBERDELETED int = 0 output,
+  @REVENUESELECTIONID UNIQUEIDENTIFIER
+)
+as			
+	set nocount off;
+	
+	declare @CURRENTDATE datetime
+	set @CURRENTDATE = getdate();
+	set @NUMBERADDED = 0;
+	set @NUMBEREDITED = 0;
+	set @NUMBERDELETED = 0; 
+	
+	if @CHANGEAGENTID is null
+		exec dbo.USP_CHANGEAGENT_GETORCREATECHANGEAGENT @CHANGEAGENTID output;
+					
+	begin try
+		-- do the global change operation here, and set @NUMBERADDED, @NUMBEREDITED, and/or @NUMBERDELETED as appropriate
+      DECLARE @REVENUESELECTION TABLE ( 
+        id UNIQUEIDENTIFIER PRIMARY KEY); 
+
+      INSERT INTO @REVENUESELECTION 
+      SELECT id 
+      FROM   dbo.Ufn_idsetreader_getresults_guid(@REVENUESELECTIONID) 
+      
+      insert into usr_revenueextended (id, addedbyid,changedbyid,dateadded,datechanged) 
+      select [@revenueselection].id,@changeagentid,@changeagentid,@currentdate,@currentdate from @revenueselection 
+      where [@revenueselection].id not in (select id from usr_revenueextended) 
+      
+      set @NUMBERADDED=@@ROWCOUNT
+    
+    -- UPDATE 2 CHAR VENDOR CODES and GIFTTYPE CODES WHEN VENDOR AND GIFTTYPE ARE NULL
+    update
+    usr_revenueextended
+    set
+    gifttypeid='FCB92207-E39B-40AE-8F9B-C4B269EA6A4E',
+    vendorid=v.id
+    from
+    usr_revenueextended re
+    inner join revenue r on r.id = re.id
+    inner join usr_vendor v on v.code= substring(r.batchnumber,1,2)
+    inner join @REVENUESELECTION QueryResults on QueryResults.ID = r.ID
+    where
+    re.gifttypeid is null
+    and re.vendorid is null;
+    --and re.id= '4DDB5E6E-8104-441E-9FB0-23204820D721'
+    --and r.postdate>='1-jun-11';
+    
+    set @NUMBEREDITED = @@rowcount + @NUMBEREDITED
+
+    -- UPDATE 1 CHAR VENDOR CODES and GIFTTYPE CODES WHEN VENDOR AND GIFTTYPE ARE NULL
+    -- MUST FOLLOW 2 CHAR UPDATE BECAUSE 2 CHAR UPDATE NEEDS TO BE CHECKED FIRST
+    update
+    usr_revenueextended
+    set
+    gifttypeid='FCB92207-E39B-40AE-8F9B-C4B269EA6A4E',
+    vendorid=v.id
+    from
+    usr_revenueextended re
+    inner join revenue r on r.id = re.id
+    inner join usr_vendor v on v.code= substring(r.batchnumber,1,1)
+    inner join @REVENUESELECTION QueryResults on QueryResults.ID = r.ID
+    where
+    re.gifttypeid is null
+    and re.vendorid is null;
+    --and re.id= '4DDB5E6E-8104-441E-9FB0-23204820D721'
+    --and r.postdate>='1-jun-11';
+    
+    set @NUMBEREDITED = @@rowcount + @NUMBEREDITED
+
+    -- UPDATE 2 CHAR VENDOR CODES WHEN VENDOR IS NULL AND GIFTTYPE POPULATED
+    -- DO NOT UPDATE GIFT TYPE ID HERE BECAUSE IT'S ALREADY SET
+    update
+    usr_revenueextended
+    set
+    vendorid=v.id
+    from
+    usr_revenueextended re
+    inner join revenue r on r.id = re.id
+    inner join usr_vendor v on v.code= substring(r.batchnumber,1,2)
+    inner join @REVENUESELECTION QueryResults on QueryResults.ID = r.ID
+    where
+    re.vendorid is null;
+    --and re.id= '4DDB5E6E-8104-441E-9FB0-23204820D721'
+    --and r.postdate>='1-jun-11';
+    
+    set @NUMBEREDITED = @@rowcount + @NUMBEREDITED
+
+    -- UPDATE 1 CHAR VENDOR CODES WHEN VENDOR IS NULL AND GIFTTYPE POPULATED
+    -- MUST FOLLOW 2 CHAR UPDATE BECAUSE 2 CHAR UPDATE NEEDS TO BE CHECKED FIRST
+    -- DO NOT UPDATE GIFT TYPE ID HERE BECAUSE IT'S ALREADY SET
+    update
+    usr_revenueextended
+    set
+    vendorid=v.id
+    from
+    usr_revenueextended re
+    inner join revenue r on r.id = re.id
+    inner join usr_vendor v on v.code= substring(r.batchnumber,1,1)
+    inner join @REVENUESELECTION QueryResults on QueryResults.ID = r.ID
+    where
+    re.vendorid is null;
+    --and re.id= '4DDB5E6E-8104-441E-9FB0-23204820D721'
+    --and r.postdate>='1-jun-11';
+    
+    -- Subtract number added from edited so the record doesn't get counted twice.
+    set @NUMBEREDITED = @@rowcount + @NUMBEREDITED - @NUMBERADDED
+   
+	end try
+	
+	begin catch
+		exec dbo.USP_RAISE_ERROR;
+		return 1;
+	end catch
+		]]>
+	</CreateProcedureSQL>
+
+  <ParametersFormMetaData>
+    <common:FormMetaData>
+      <common:FormFields>
+        <common:FormField FieldID="REVENUESELECTIONID" Caption="Revenue Selection" DataType="Guid" Required="true" >
+          <common:SearchList SearchListID="1F0E603C-1C55-4E1E-8218-BDB877B2CBE8">
+          </common:SearchList>
+        </common:FormField>
+      </common:FormFields>
+      <common:WebUIComponent>
+        <common:WebUI>
+          <common:DefaultWebUI />
+        </common:WebUI>
+      </common:WebUIComponent>
+    </common:FormMetaData>
+  </ParametersFormMetaData>
+	
+</GlobalChangeSpec>

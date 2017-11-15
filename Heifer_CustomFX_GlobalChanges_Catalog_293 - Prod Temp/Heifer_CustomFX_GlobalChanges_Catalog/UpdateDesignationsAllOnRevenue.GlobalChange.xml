@@ -1,0 +1,127 @@
+﻿  <GlobalChangeSpec
+    xmlns="bb_appfx_globalchange"
+    xmlns:common="bb_appfx_commontypes"
+    ID="a25b2f9d-d330-4b45-b955-30b4ea82d7a7"
+    Name="Update Designation All On Revenue Global Change"
+    Description="Change Revenue Designation based on Revenue Selection"
+    Author="HEIFERNET\khamling"
+    DisplayName="Update Designation All On Revenue Global Change"
+    GlobalChangeFolder="REVENUE"
+    SPName="USR_USP_GLOBALCHANGE_UPDATEDESIGNATION_ON_REVENUE"
+>
+
+    <!-- describe the SP that performs the global change operation -->
+    <CreateProcedureSQL>
+      <![CDATA[
+create procedure dbo.USR_USP_GLOBALCHANGE_UPDATEDESIGNATION_ON_REVENUE
+(
+	@CHANGEAGENTID uniqueidentifier = null,
+	@ASOF as datetime = null,
+	@NUMBERADDED int = 0 output,
+	@NUMBEREDITED int = 0 output,
+	@NUMBERDELETED int = 0 output,
+  @NEWVALUE varchar(30),
+  @REVENUESELECTIONID UNIQUEIDENTIFIER
+)
+as			
+	set nocount off;
+	
+  declare @I_MAX integer
+  declare @CURRENTDATE datetime
+	set @CURRENTDATE = getdate();
+	set @NUMBERADDED = 0;
+	set @NUMBEREDITED = 0;
+	set @NUMBERDELETED = 0; 
+  
+	
+	if @CHANGEAGENTID is null
+		exec dbo.USP_CHANGEAGENT_GETORCREATECHANGEAGENT @CHANGEAGENTID output;
+					
+	begin try
+		-- do the global change operation here, and set @NUMBERADDED, @NUMBEREDITED, and/or @NUMBERDELETED as appropriate
+    
+      DECLARE @REVENUESELECTION TABLE ( 
+        id UNIQUEIDENTIFIER PRIMARY KEY); 
+
+      INSERT INTO @REVENUESELECTION
+      SELECT id 
+      FROM   dbo.Ufn_idsetreader_getresults_guid(@REVENUESELECTIONID) 
+      
+    declare @T table
+    (
+      PK int identity(1,1),  
+      REVENUEID uniqueidentifier
+    )
+    declare @I int = 1
+    
+    insert into @T 
+	    select 
+        ID
+      from
+        @REVENUESELECTION
+	    
+    select @I_MAX = count(*) from @T
+    
+    declare @REVENUEID uniqueidentifier
+
+		--BEGIN LOOPING THROUGH TABLE DEFINED ABOVE 
+    while @I <= @I_MAX
+	  begin 		
+			  select 
+          @REVENUEID = REVENUEID
+        from 
+          @T 
+        where 
+          PK = @I
+      
+        --update revenuesplit set designationid = (select top 1 id from designation where userid=@NEWVALUE and ISACTIVE=1)
+        --where 
+        --  revenueid in (select ID from @REVENUESELECTION)
+        
+        begin
+          begin try  
+            update revenuesplit set designationid = (select top 1 id from designation where userid=@NEWVALUE and ISACTIVE=1)
+            where revenueid = @REVENUEID
+            
+            --taken from "Revenue Split Details Edit Form 2" to update gl account distribution
+            delete from dbo.REVENUEGLDISTRIBUTION where REVENUEID = @REVENUEID and OUTDATED = 0;
+            exec dbo.USP_SAVE_REVENUEGLDISTRIBUTION @REVENUEID, @CHANGEAGENTID, @CURRENTDATE;
+          end try
+	        begin catch
+		        exec dbo.USP_RAISE_ERROR;
+		        return 1;
+	        end catch
+        end
+        
+		  set @I = @I + 1       		   
+      set @NUMBEREDITED = @NUMBEREDITED+@@ROWCOUNT;     
+	  end
+    --END LOOPING THROUGH TABLE DEFINED ABOVE		
+	end try
+	
+	begin catch
+		exec dbo.USP_RAISE_ERROR;
+		return 1;
+	end catch
+		]]>
+    </CreateProcedureSQL>
+
+    <ParametersFormMetaData>
+      <common:FormMetaData>
+        <common:FormFields>
+          <common:FormField FieldID="NEWVALUE" Caption="New Designation" DataType="String" Required="true" >
+          </common:FormField>
+          <common:FormField FieldID="REVENUESELECTIONID" Caption="Revenue Selection" DataType="Guid" Required="true" >
+            <common:SearchList SearchListID="1F0E603C-1C55-4E1E-8218-BDB877B2CBE8">
+            </common:SearchList>
+          </common:FormField>
+        </common:FormFields>
+        <common:WebUIComponent>
+          <common:WebUI>
+            <common:DefaultWebUI />
+          </common:WebUI>
+        </common:WebUIComponent>
+      </common:FormMetaData>
+    </ParametersFormMetaData>
+
+  </GlobalChangeSpec>

@@ -1,0 +1,105 @@
+﻿  <GlobalChangeSpec
+      xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      ID="0a5b8573-8c66-4b46-8c05-aeb0c9dbb3d2"
+      Name="Change Primary Coordinator to Former Global Change"
+      Description="Will Change Primary Coordinator and Primary Portfolio to Former"
+      Author="HEIFERNET\khamling"
+      SPName="USP_GLOBALCHANGE_PRIMARYPCTOFORMER"
+      DisplayName="Change Primary Coordinator to Former Global Change"
+      GlobalChangeFolder="Constituent"
+      xmlns="bb_appfx_globalchange"
+    >
+    <CreateProcedureSQL>
+      <![CDATA[
+      create procedure dbo.USP_GLOBALCHANGE_PRIMARYPCTOFORMER
+      (
+      @CHANGEAGENTID uniqueidentifier = null,
+      @ASOF as datetime = null,
+      @NUMBERADDED int = 0 output,
+      @NUMBEREDITED int = 0 output,
+      @NUMBERDELETED int = 0 output,
+      @SELECTIONID uniqueidentifier
+      )
+      as
+      set nocount off;
+
+      declare @CURRENTDATE datetime
+      set @CURRENTDATE = getdate();
+      set @NUMBERADDED = 0;
+      set @NUMBEREDITED = 0;
+      set @NUMBERDELETED = 0;
+
+      if @CHANGEAGENTID is null
+      exec dbo.USP_CHANGEAGENT_GETORCREATECHANGEAGENT @CHANGEAGENTID output;
+
+      begin try
+      declare @IDS table (ID uniqueidentifier PRIMARY KEY);
+
+      insert into @IDS
+      select ID from dbo.UFN_IDSETREADER_GETRESULTS_GUID(@SELECTIONID)
+
+      -----------------------------------------------------------------------------
+      declare @T table
+      (
+      PK int identity(1,1),
+      CONSTITUENTID uniqueidentifier
+      )
+      declare @I int = 1
+      declare @I_MAX int = 1
+
+      insert into @T
+      select
+      ID
+      from
+      constituent where id in (select id from @IDS)
+
+      declare @CONSTITUENTID uniqueidentifier
+
+      select @I_MAX = count(*) from @T
+
+      --BEGIN LOOPING THROUGH TABLE DEFINED ABOVE
+      while @I <= @I_MAX
+      begin
+        select
+        @CONSTITUENTID = CONSTITUENTID
+        from
+        @T
+        where
+        PK = @I
+        --
+        --change current primary coordinator to former.  Reciprocal relationship is handled automatically
+        UPDATE RELATIONSHIP
+        SET RECIPROCALTYPECODEID = 'CF8E5E05-7EE5-4BA2-9FAB-220E7BC049EC',
+        RELATIONSHIPTYPECODEID = '40F7D9E0-F237-4744-A3CD-E26B9AB49BC4'
+        WHERE RELATIONSHIPCONSTITUENTID = @CONSTITUENTID
+        AND RECIPROCALTYPECODEID = 'C1826BBA-653F-47BE-8FF2-104018BFE7E7'
+        AND RELATIONSHIPTYPECODEID = '1D89AE83-29A3-4319-87C0-E7E1FCCDD6F8'        
+        AND RECIPROCALCONSTITUENTID NOT IN (select distinct RECIPROCALCONSTITUENTID FROM RELATIONSHIP WHERE RELATIONSHIPTYPECODEID = '40F7D9E0-F237-4744-A3CD-E26B9AB49BC4' AND RECIPROCALTYPECODEID = 'CF8E5E05-7EE5-4BA2-9FAB-220E7BC049EC' and RELATIONSHIPCONSTITUENTID = @CONSTITUENTID)
+
+        set @NUMBEREDITED = @NUMBEREDITED + @@ROWCOUNT
+
+        set @I = @I + 1
+      --
+      end
+      --END LOOPING THROUGH TABLE DEFINED ABOVE
+      ---------------------------------------------------------------------------------------------
+
+      end try
+      begin catch
+      exec dbo.USP_RAISE_ERROR;
+      return 1;
+      end catch
+		]]>
+    </CreateProcedureSQL>
+    <ParametersFormMetaData>
+      <FormMetaData xmlns="bb_appfx_commontypes">
+        <FormFields>
+          <FormField FieldID="SELECTIONID" DataType="Guid" Required="true" Caption="Selection">
+            <SearchList SearchListID="1f0e603c-1c55-4e1e-8218-bdb877b2cbe8">
+            </SearchList>
+          </FormField>
+        </FormFields>
+      </FormMetaData>
+    </ParametersFormMetaData>
+  </GlobalChangeSpec>

@@ -1,0 +1,22 @@
+﻿<TableSpec 
+	xmlns="bb_appfx_table"
+	xmlns:common="bb_appfx_commontypes" 
+	ID="765e2673-1cf0-4641-8ad3-1f59c022e63f"
+	Name="USR_CONT"
+	Description="USR_CONT"
+	Author="DSS"
+	Tablename="USR_CONT"		   
+	>
+
+	<!-- define fields on the table -->
+	<Fields>
+    <NumberField Name="PK" Type="int" >
+      <Identity Increment="1" IsUnique="true"/>
+    </NumberField>
+    <GuidField Name="CONSTID"/>
+    <TextField Name="ADDR" Length="2000"/>
+    <TextField Name="CITY" Length="100"/>
+    <GuidField Name="STATEID"/>
+	</Fields>
+
+</TableSpec>

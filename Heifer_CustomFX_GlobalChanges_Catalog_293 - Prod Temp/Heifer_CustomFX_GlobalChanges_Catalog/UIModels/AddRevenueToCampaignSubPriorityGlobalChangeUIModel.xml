@@ -1,0 +1,10 @@
+﻿<UIModelWizardMetadata>
+  <SpecFileName>AddRevenueToCampaignSubPriority.GlobalChange.xml</SpecFileName>
+  <Namespace></Namespace>
+  <ClassName>AddRevenueToCampaignSubPriorityGlobalChangeUIModel</ClassName>
+  <HtmlInfo GenerateHtml="true">
+    <HtmlFile>AddRevenueToCampaignSubPriorityGlobalChange.html</HtmlFile>
+    <HtmlFolder></HtmlFolder>
+  </HtmlInfo>
+  <GenerateFromDatabase>false</GenerateFromDatabase>
+</UIModelWizardMetadata>

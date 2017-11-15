@@ -1,0 +1,85 @@
+﻿<GlobalChangeSpec 
+	xmlns="bb_appfx_globalchange"  
+	xmlns:common="bb_appfx_commontypes"
+	ID="70add2bc-bc4d-49a6-9914-51aa9aa4c85d"
+	Name="Move Constituent Titles Global Change"
+	Description="Move Constituent Titles from First Name field to Title Field"
+	Author="HEIFERNET\khamling"
+	DisplayName="Move Constituent Titles Global Change"
+	GlobalChangeFolder="Constituent"
+	SPName="USP_GLOBALCHANGE_MOVECONSTITUENTTITLES"
+>
+
+    <!-- describe the SP that performs the global change operation -->
+    <CreateProcedureSQL>
+      <![CDATA[
+		create procedure dbo.USP_GLOBALCHANGE_MOVECONSTITUENTTITLES
+(
+	@CHANGEAGENTID uniqueidentifier = null,
+	@ASOF as datetime = null,
+	@NUMBERADDED int = 0 output,
+	@NUMBEREDITED int = 0 output,
+	@NUMBERDELETED int = 0 output,
+	@CONSTITUENTSELECTIONID UNIQUEIDENTIFIER
+)
+as			
+	set nocount off;
+	
+	declare @CURRENTDATE datetime
+	set @CURRENTDATE = getdate();
+	set @NUMBERADDED = 0;
+	set @NUMBEREDITED = 0;
+	set @NUMBERDELETED = 0; 
+	
+	if @CHANGEAGENTID is null
+		exec dbo.USP_CHANGEAGENT_GETORCREATECHANGEAGENT @CHANGEAGENTID output;	
+	
+		-- do the global change operation here, and set @NUMBERADDED, @NUMBEREDITED, and/or @NUMBERDELETED as appropriate
+	
+    Begin   
+      -- Table to hold selection ids
+      DECLARE @CONSTITUENTSELECTION TABLE (id UNIQUEIDENTIFIER PRIMARY KEY); 
+
+      INSERT INTO @CONSTITUENTSELECTION 
+      SELECT id 
+      FROM   dbo.Ufn_idsetreader_getresults_guid(@CONSTITUENTSELECTIONID) 
+			    
+			
+
+          begin try
+   
+           update constituent
+           set 
+             title = newtitle,
+             name = newname
+           from constituent c
+	         inner join @CONSTITUENTSELECTION SelectionResults on SelectionResults.ID = c.id
+ 
+ 
+              
+          end try
+	        begin catch
+		        exec dbo.USP_RAISE_ERROR;
+		        return 1;
+	        end catch 
+		End
+		]]>
+    </CreateProcedureSQL>
+
+    <ParametersFormMetaData>
+      <common:FormMetaData>
+        <common:FormFields>
+          <common:FormField FieldID="CONSTITUENTSELECTIONID" Caption="Constituent Selection" DataType="Guid" Required="true" >
+            <common:SearchList SearchListID="1F0E603C-1C55-4E1E-8218-BDB877B2CBE8">
+            </common:SearchList>
+          </common:FormField>
+        </common:FormFields>
+        <common:WebUIComponent>
+          <common:WebUI>
+            <common:DefaultWebUI />
+          </common:WebUI>
+        </common:WebUIComponent>
+      </common:FormMetaData>
+    </ParametersFormMetaData>
+
+  </GlobalChangeSpec>

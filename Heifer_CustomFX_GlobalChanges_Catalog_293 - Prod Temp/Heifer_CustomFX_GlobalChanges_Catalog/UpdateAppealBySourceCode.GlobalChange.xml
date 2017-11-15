@@ -1,0 +1,153 @@
+﻿<GlobalChangeSpec 
+	xmlns="bb_appfx_globalchange"  
+	xmlns:common="bb_appfx_commontypes"
+	ID="2c4106aa-1580-42ae-8101-9ebe8607f762"
+	Name="Update Appeal By Source Code Global Change"
+	Description="Update Appeal By Source Code Global Change"
+	Author="HEIFERNET\khamling"
+	DisplayName="Update Appeal By Source Code Global Change"
+	GlobalChangeFolder="Revenue"
+	SPName="USP_GLOBALCHANGE_UPDATENULLAPPEALSBYSOURCECODE"
+>
+
+    <!-- describe the SP that performs the global change operation -->
+    <CreateProcedureSQL>
+      <![CDATA[
+create procedure dbo.USP_GLOBALCHANGE_UPDATENULLAPPEALSBYSOURCECODE
+(
+	@CHANGEAGENTID uniqueidentifier = null,
+	@ASOF as datetime = null,
+	@NUMBERADDED int = 0 output,
+	@NUMBEREDITED int = 0 output,
+	@NUMBERDELETED int = 0 output,
+  @REVENUESELECTIONID UNIQUEIDENTIFIER
+)
+as			
+	set nocount off;
+	
+  declare @I_MAX integer
+	declare @CURRENTDATE datetime
+	set @CURRENTDATE = getdate();
+	set @NUMBERADDED = 0;
+	set @NUMBEREDITED = 0;
+	set @NUMBERDELETED = 0; 
+	
+	if @CHANGEAGENTID is null
+		exec dbo.USP_CHANGEAGENT_GETORCREATECHANGEAGENT @CHANGEAGENTID output;
+					
+	begin try
+		-- do the global change operation here, and set @NUMBERADDED, @NUMBEREDITED, and/or @NUMBERDELETED as appropriate
+		
+      DECLARE @REVENUESELECTION TABLE ( 
+        id UNIQUEIDENTIFIER PRIMARY KEY); 
+
+      INSERT INTO @REVENUESELECTION
+      SELECT id 
+      FROM   dbo.Ufn_idsetreader_getresults_guid(@REVENUESELECTIONID) 
+      
+-----------------------------------------------------------------------------
+    declare @T table
+    (
+      PK int identity(1,1),  
+      REVENUEID uniqueidentifier,
+      SOURCECODE varchar(100)
+    )
+    declare @I int = 1
+    
+    insert into @T
+	    select 
+        ID,
+        SOURCECODE
+      from
+        revenue where id in (select id from @REVENUESELECTION)    
+	    
+    declare @REVENUEID uniqueidentifier
+    declare @SOURCECODE varchar(100)
+    declare @APPEALID uniqueidentifier
+    
+    select @I_MAX = count(*) from @T
+    
+		--BEGIN LOOPING THROUGH TABLE DEFINED ABOVE 
+    while @I <= @I_MAX
+	  begin 		
+			  select 
+          @REVENUEID = REVENUEID,
+          @SOURCECODE = SOURCECODE
+        from 
+          @T 
+        where 
+          PK = @I
+          
+      --set to null here in case empty set is returned from both selects, then update doesn't happen below
+      set @APPEALID = '00000000-0000-0000-0000-000000000000'
+      
+      IF EXISTS ( SELECT  ID
+              FROM    dbo.MKTSOURCECODEMAP
+              WHERE   MKTSOURCECODEMAP.SOURCECODE = @SOURCECODE ) 
+      BEGIN         
+        SELECT TOP 1
+              @APPEALID = APPEAL.ID
+        FROM    dbo.MKTSOURCECODEMAP
+              LEFT JOIN dbo.MKTSEGMENTATIONACTIVATE ON MKTSOURCECODEMAP.SEGMENTATIONID = MKTSEGMENTATIONACTIVATE.SEGMENTATIONID
+              LEFT JOIN dbo.APPEAL ON MKTSEGMENTATIONACTIVATE.APPEALSYSTEMID = APPEAL.ID
+              LEFT JOIN dbo.APPEALDESIGNATION ON APPEAL.ID = APPEALDESIGNATION.APPEALID            
+        WHERE   MKTSOURCECODEMAP.SOURCECODE = @SOURCECODE
+        ORDER BY APPEALDESIGNATION.ISDEFAULT DESC
+      
+      END
+      ELSE 
+      BEGIN
+        SELECT TOP 1
+              @APPEALID = APPEAL.ID
+        FROM    dbo.APPEAL
+              LEFT JOIN dbo.APPEALDESIGNATION ON APPEAL.ID = APPEALDESIGNATION.APPEALID
+              left join DBO.DESIGNATION on dbo.APPEALDESIGNATION.DESIGNATIONID = dbo.DESIGNATION.ID
+        WHERE   APPEAL.ID = ( SELECT TOP 1
+                                      CONSTITUENTAPPEAL.APPEALID
+                            FROM      dbo.CONSTITUENTAPPEAL
+                            WHERE     CONSTITUENTAPPEAL.SOURCECODE = @SOURCECODE
+                          )
+        ORDER BY APPEALDESIGNATION.ISDEFAULT DESC
+      END    
+
+        if @APPEALID <> '00000000-0000-0000-0000-000000000000' and isnull(@SOURCECODE,'') <> ''
+        begin
+            begin try        
+                update REVENUE_EXT set APPEALID = @APPEALID where id = @REVENUEID and APPEALID is null
+                set @NUMBEREDITED = @NUMBEREDITED + @@rowcount; 
+            end try
+            begin catch
+            	exec dbo.USP_RAISE_ERROR;
+		          return 1;
+            end catch
+        end
+		    set @I = @I + 1        
+	  end
+    --END LOOPING THROUGH TABLE DEFINED ABOVE
+---------------------------------------------------------------------------------------------           
+      
+	end try
+	begin catch
+		exec dbo.USP_RAISE_ERROR;
+		return 1;
+	end catch
+		]]>
+    </CreateProcedureSQL>
+
+    <ParametersFormMetaData>
+      <common:FormMetaData>
+        <common:FormFields>
+          <common:FormField FieldID="REVENUESELECTIONID" Caption="Revenue Selection" DataType="Guid" Required="true" >
+            <common:SearchList SearchListID="1F0E603C-1C55-4E1E-8218-BDB877B2CBE8">
+            </common:SearchList>
+          </common:FormField>
+        </common:FormFields>
+        <common:WebUIComponent>
+          <common:WebUI>
+            <common:DefaultWebUI />
+          </common:WebUI>
+        </common:WebUIComponent>
+      </common:FormMetaData>
+    </ParametersFormMetaData>
+
+  </GlobalChangeSpec>

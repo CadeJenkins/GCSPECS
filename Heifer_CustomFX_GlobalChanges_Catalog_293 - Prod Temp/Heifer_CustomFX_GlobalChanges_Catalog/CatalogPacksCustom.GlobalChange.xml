@@ -1,0 +1,4740 @@
+﻿<GlobalChangeSpec 
+	xmlns="bb_appfx_globalchange"  
+	xmlns:common="bb_appfx_commontypes"
+	ID="343e9e33-b40f-4a2c-9ddf-7f221c9b34d8"
+	Name="Catalog Packs Custom Global Change"
+	Description="Convert catalog Packs into individual catalog items"
+	Author="HEIFERNET\khamling"
+	DisplayName="Catalog Packs Custom Global Change"
+	GlobalChangeFolder="REVENUE"
+	SPName="USP_GLOBALCHANGE_CATALOGREVENUEPACKSCUSTOM"
+>
+
+  <!-- describe the SP that performs the global change operation -->
+  <CreateProcedureSQL>
+    <![CDATA[
+create procedure dbo.USP_GLOBALCHANGE_CATALOGREVENUEPACKSCUSTOM
+(
+
+	@CHANGEAGENTID uniqueidentifier = null,
+	@ASOF as datetime = null,
+	@NUMBERADDED int = 0 output,
+	@NUMBEREDITED int = 0 output,
+	@NUMBERDELETED int = 0 output,
+  @KITCODE varchar(30) = '',
+  @CATALOGREVENUESELECTIONID UNIQUEIDENTIFIER,
+  @ITEM_1 varchar(30) = '',
+  @QUANT_1 int = 0,
+  @ITEM_2 varchar(30) = '',
+  @QUANT_2 int = 0,
+  @ITEM_3 varchar(30) = '',
+  @QUANT_3 int = 0,
+  @ITEM_4 varchar(30) = '',
+  @QUANT_4 int = 0,
+  @ITEM_5 varchar(30) = '',
+  @QUANT_5 int = 0,
+  @ITEM_6 varchar(30) = '',
+  @QUANT_6 int = 0,
+  @ITEM_7 varchar(30) = '',
+  @QUANT_7 int = 0,
+  @ITEM_8 varchar(30) = '',
+  @QUANT_8 int = 0,  
+  @ITEM_9 varchar(30) = '',
+  @QUANT_9 int = 0,
+  @ITEM_10 varchar(30) = '',
+  @QUANT_10 int = 0,
+  @ITEM_11 varchar(30) = '',
+  @QUANT_11 int = 0,
+  @ITEM_12 varchar(30) = '',
+  @QUANT_12 int = 0,
+  @ITEM_13 varchar(30) = '',
+  @QUANT_13 int = 0,  
+  @ITEM_14 varchar(30) = '',
+  @QUANT_14 int = 0,
+  @ITEM_15 varchar(30) = '',
+  @QUANT_15 int = 0,
+  @ITEM_16 varchar(30) = '',
+  @QUANT_16 int = 0,
+  @ITEM_17 varchar(30) = '',
+  @QUANT_17 int = 0,
+  @ITEM_18 varchar(30) = '',
+  @QUANT_18 int = 0,  
+  @ITEM_19 varchar(30) = '',
+  @QUANT_19 int = 0,
+  @ITEM_20 varchar(30) = '',
+  @QUANT_20 int = 0,
+  @ITEM_21 varchar(30) = '',
+  @QUANT_21 int = 0,
+  @ITEM_22 varchar(30) = '',
+  @QUANT_22 int = 0,
+  @ITEM_23 varchar(30) = '',
+  @QUANT_23 int = 0,  
+  @ITEM_24 varchar(30) = '',
+  @QUANT_24 int = 0,
+  @ITEM_25 varchar(30) = '',
+  @QUANT_25 int = 0,
+  @ITEM_26 varchar(30) = '',
+  @QUANT_26 int = 0,
+  @ITEM_27 varchar(30) = '',
+  @QUANT_27 int = 0,
+  @ITEM_28 varchar(30) = '',
+  @QUANT_28 int = 0,  
+  @ITEM_29 varchar(30) = '',
+  @QUANT_29 int = 0,
+  @ITEM_30 varchar(30) = '',
+  @QUANT_30 int = 0,
+  @ITEM_31 varchar(30) = '',
+  @QUANT_31 int = 0,
+  @ITEM_32 varchar(30) = '',
+  @QUANT_32 int = 0,
+  @ITEM_33 varchar(30) = '',
+  @QUANT_33 int = 0,  
+  @ITEM_34 varchar(30) = '',
+  @QUANT_34 int = 0,
+  @ITEM_35 varchar(30) = '',
+  @QUANT_35 int = 0,
+  @ITEM_36 varchar(30) = '',
+  @QUANT_36 int = 0,
+  @ITEM_37 varchar(30) = '',
+  @QUANT_37 int = 0,
+  @ITEM_38 varchar(30) = '',
+  @QUANT_38 int = 0,  
+  @ITEM_39 varchar(30) = '',
+  @QUANT_39 int = 0,
+  @ITEM_40 varchar(30) = '',
+  @QUANT_40 int = 0,
+  @ITEM_41 varchar(30) = '',
+  @QUANT_41 int = 0,
+  @ITEM_42 varchar(30) = '',
+  @QUANT_42 int = 0,
+  @ITEM_43 varchar(30) = '',
+  @QUANT_43 int = 0,  
+  @ITEM_44 varchar(30) = '',
+  @QUANT_44 int = 0,
+  @ITEM_45 varchar(30) = '',
+  @QUANT_45 int = 0,
+  @ITEM_46 varchar(30) = '',
+  @QUANT_46 int = 0,
+  @ITEM_47 varchar(30) = '',
+  @QUANT_47 int = 0,
+  @ITEM_48 varchar(30) = '',
+  @QUANT_48 int = 0,  
+  @ITEM_49 varchar(30) = '',
+  @QUANT_49 int = 0,
+  @ITEM_50 varchar(30) = '',
+  @QUANT_50 int = 0
+)
+as			
+	set nocount off;
+	
+  declare @I_MAX integer
+	declare @CURRENTDATE datetime
+	set @CURRENTDATE = getdate();
+	set @NUMBERADDED = 0;
+	set @NUMBEREDITED = 0;
+	set @NUMBERDELETED = 0;
+  
+	
+	if @CHANGEAGENTID is null
+		exec dbo.USP_CHANGEAGENT_GETORCREATECHANGEAGENT @CHANGEAGENTID output;
+					
+	begin try
+		-- do the global change operation here, and set @NUMBERADDED, @NUMBEREDITED, and/or @NUMBERDELETED as appropriate
+      DECLARE @CATALOGREVENUESELECTION TABLE (id UNIQUEIDENTIFIER PRIMARY KEY); 
+
+      INSERT INTO @CATALOGREVENUESELECTION 
+      SELECT id 
+      FROM   dbo.Ufn_idsetreader_getresults_guid(@CATALOGREVENUESELECTIONID) 
+      
+     declare @T table
+    (
+      PK int identity(1,1), 
+      CATALOGREVENUEID uniqueidentifier, 
+      CATALOGCODE nvarchar(50), 
+      INITIALQUANTITY integer,
+			CHANGEAGENTID uniqueidentifier,
+			CHANGEDATE datetime
+    )
+    declare @I int = 1
+    
+    -- insert records that meet criteria (catalog item = '69.RH2011KIT' at this point)
+    insert into @T 
+	    select 
+        CR.ID, CIA.CATALOGCODE, CR.QUANTITY, CR.CHANGEDBYID, CR.DATECHANGED
+      from dbo.USR_CATALOGREVENUE CR
+	      inner join dbo.USR_CATALOGITEMATTRIBUTE CIA on cia.id = cr.catalogitemattributeid
+        inner join dbo.REVENUE R on R.id = cr.revenueid
+        inner join @CATALOGREVENUESELECTION SelectionResults on SelectionResults.ID = r.ID
+	    where
+        cia.catalogcode = @KITCODE
+        -- and not processed
+         and CR.QUANTITY <> 0
+         and CR.FULFILLED = 0
+	    
+    select @I_MAX = count(*) from @T
+    
+    declare @CATALOGREVENUEID uniqueidentifier
+    declare @CATALOGCODE nvarchar(50)
+    declare @INITIALQUANTITY integer
+    declare @CATALOGREVENUECHANGEAGENTID uniqueidentifier
+    declare @CHANGEDATE datetime
+
+		--BEGIN LOOPING THROUGH TABLE DEFINED ABOVE 
+    while @I <= @I_MAX
+	  begin 		
+			  select 
+          @CATALOGREVENUEID = CATALOGREVENUEID,
+          @CATALOGCODE = CATALOGCODE,
+          @INITIALQUANTITY = INITIALQUANTITY,
+          @CATALOGREVENUECHANGEAGENTID = CHANGEAGENTID,
+          @CHANGEDATE = CHANGEDATE
+        from 
+          @T 
+        where 
+          PK = @I
+        ----------------------------------------------------------------------------------------------------------------------------
+        -- create new CATALOGREVENUE records with new codes and correct quantities
+        ----------------------------------------------------------------------------------------------------------------------------
+        begin
+          begin try     
+-------------------------------------------
+-- Add Item 1
+-------------------------------------------
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_1),
+               @INITIALQUANTITY * @QUANT_1,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID     
+               
+               -- ONLY DO THIS ON FIRST ITEM, WHICH IS REQUIRED
+               set @NUMBEREDITED = @NUMBEREDITED + @@ROWCOUNT;
+-------------------------------------------
+-- Add Item 2
+-------------------------------------------
+            if @ITEM_2 <> ''
+            begin  
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_2),
+               @INITIALQUANTITY * @QUANT_2,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end
+-------------------------------------------
+-- Add Item 3
+-------------------------------------------
+            if @ITEM_3 <> ''
+            begin  
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_3),
+               @INITIALQUANTITY * @QUANT_3,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end
+-------------------------------------------
+-- Add Item 4
+-------------------------------------------
+            if @ITEM_4 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_4),
+               @INITIALQUANTITY * @QUANT_4,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end
+-------------------------------------------
+-- Add Item 5
+-------------------------------------------
+            if @ITEM_5 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_5),
+               @INITIALQUANTITY * @QUANT_5,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end
+-------------------------------------------
+-- Add Item 6
+-------------------------------------------
+            if @ITEM_6 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_6),
+               @INITIALQUANTITY * @QUANT_6,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID    
+             end               
+-------------------------------------------
+-- Add Item 7
+-------------------------------------------
+            if @ITEM_7 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_7),
+               @INITIALQUANTITY * @QUANT_7,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID       
+             end               
+-------------------------------------------
+-- Add Item 8
+-------------------------------------------
+            if @ITEM_8 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_8),
+               @INITIALQUANTITY * @QUANT_8,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID   
+             end               
+-------------------------------------------
+-- Add Item 9
+-------------------------------------------
+            if @ITEM_9 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_9),
+               @INITIALQUANTITY * @QUANT_9,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID  
+             end               
+-------------------------------------------
+-- Add Item 10
+-------------------------------------------
+            if @ITEM_10 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_10),
+               @INITIALQUANTITY * @QUANT_10,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID  
+             end               
+-------------------------------------------
+-- Add Item 11
+-------------------------------------------
+            if @ITEM_11 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_11),
+               @INITIALQUANTITY * @QUANT_11,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID
+             end               
+-------------------------------------------
+-- Add Item 12
+-------------------------------------------
+            if @ITEM_12 <> ''
+            begin  
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_12),
+               @INITIALQUANTITY * @QUANT_12,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end
+-------------------------------------------
+-- Add Item 13
+-------------------------------------------
+            if @ITEM_13 <> ''
+            begin  
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_13),
+               @INITIALQUANTITY * @QUANT_13,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end
+-------------------------------------------
+-- Add Item 14
+-------------------------------------------
+            if @ITEM_14 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_14),
+               @INITIALQUANTITY * @QUANT_14,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID         
+             end               
+-------------------------------------------
+-- Add Item 15
+-------------------------------------------
+            if @ITEM_15 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_15),
+               @INITIALQUANTITY * @QUANT_15,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID      
+             end               
+-------------------------------------------
+-- Add Item 16
+-------------------------------------------
+            if @ITEM_16 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_16),
+               @INITIALQUANTITY * @QUANT_16,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID   
+             end               
+-------------------------------------------
+-- Add Item 17
+-------------------------------------------
+            if @ITEM_17 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_17),
+               @INITIALQUANTITY * @QUANT_17,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID       
+             end               
+-------------------------------------------
+-- Add Item 18
+-------------------------------------------
+            if @ITEM_18 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_18),
+               @INITIALQUANTITY * @QUANT_18,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID   
+             end               
+-------------------------------------------
+-- Add Item 19
+-------------------------------------------
+            if @ITEM_19 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_19),
+               @INITIALQUANTITY * @QUANT_19,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID  
+             end               
+-------------------------------------------
+-- Add Item 20
+-------------------------------------------
+            if @ITEM_20 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_20),
+               @INITIALQUANTITY * @QUANT_20,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end               
+-------------------------------------------
+-- Add Item 21
+-------------------------------------------
+            if @ITEM_21 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_21),
+               @INITIALQUANTITY * @QUANT_21,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID   
+             end               
+-------------------------------------------
+-- Add Item 22
+-------------------------------------------
+            if @ITEM_22 <> ''
+            begin  
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_22),
+               @INITIALQUANTITY * @QUANT_22,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end
+-------------------------------------------
+-- Add Item 23
+-------------------------------------------
+            if @ITEM_23 <> ''
+            begin  
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_23),
+               @INITIALQUANTITY * @QUANT_23,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end
+-------------------------------------------
+-- Add Item 24
+-------------------------------------------
+            if @ITEM_24 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_24),
+               @INITIALQUANTITY * @QUANT_24,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID    
+             end               
+-------------------------------------------
+-- Add Item 25
+-------------------------------------------
+            if @ITEM_25 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_25),
+               @INITIALQUANTITY * @QUANT_25,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID  
+             end               
+-------------------------------------------
+-- Add Item 26
+-------------------------------------------
+            if @ITEM_26 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_26),
+               @INITIALQUANTITY * @QUANT_26,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID         
+             end               
+-------------------------------------------
+-- Add Item 27
+-------------------------------------------
+            if @ITEM_27 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_27),
+               @INITIALQUANTITY * @QUANT_27,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end               
+-------------------------------------------
+-- Add Item 28
+-------------------------------------------
+            if @ITEM_28 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_28),
+               @INITIALQUANTITY * @QUANT_28,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID  
+             end               
+-------------------------------------------
+-- Add Item 29
+-------------------------------------------
+            if @ITEM_29 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_29),
+               @INITIALQUANTITY * @QUANT_29,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID        
+             end               
+-------------------------------------------
+-- Add Item 30
+-------------------------------------------
+            if @ITEM_30 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_30),
+               @INITIALQUANTITY * @QUANT_30,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end               
+-------------------------------------------
+-- Add Item 31
+-------------------------------------------
+            if @ITEM_31 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_31),
+               @INITIALQUANTITY * @QUANT_31,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID   
+             end               
+-------------------------------------------
+-- Add Item 32
+-------------------------------------------
+            if @ITEM_32 <> ''
+            begin  
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_32),
+               @INITIALQUANTITY * @QUANT_32,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end
+-------------------------------------------
+-- Add Item 33
+-------------------------------------------
+            if @ITEM_33 <> ''
+            begin  
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_33),
+               @INITIALQUANTITY * @QUANT_33,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end
+-------------------------------------------
+-- Add Item 34
+-------------------------------------------
+            if @ITEM_34 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_34),
+               @INITIALQUANTITY * @QUANT_34,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID    
+             end               
+-------------------------------------------
+-- Add Item 35
+-------------------------------------------
+            if @ITEM_35 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_35),
+               @INITIALQUANTITY * @QUANT_35,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID       
+             end               
+-------------------------------------------
+-- Add Item 36
+-------------------------------------------
+            if @ITEM_36 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_36),
+               @INITIALQUANTITY * @QUANT_36,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID     
+             end               
+-------------------------------------------
+-- Add Item 37
+-------------------------------------------
+            if @ITEM_37 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_37),
+               @INITIALQUANTITY * @QUANT_37,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID   
+             end               
+-------------------------------------------
+-- Add Item 38
+-------------------------------------------
+            if @ITEM_38 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_38),
+               @INITIALQUANTITY * @QUANT_38,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID   
+             end               
+-------------------------------------------
+-- Add Item 39
+-------------------------------------------
+            if @ITEM_39 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_39),
+               @INITIALQUANTITY * @QUANT_39,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID   
+             end               
+-------------------------------------------
+-- Add Item 40
+-------------------------------------------
+            if @ITEM_40 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_40),
+               @INITIALQUANTITY * @QUANT_40,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end               
+-------------------------------------------
+-- Add Item 41
+-------------------------------------------
+            if @ITEM_41 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_41),
+               @INITIALQUANTITY * @QUANT_41,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID      
+             end               
+-------------------------------------------
+-- Add Item 42
+-------------------------------------------
+            if @ITEM_42 <> ''
+            begin  
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_42),
+               @INITIALQUANTITY * @QUANT_42,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end
+-------------------------------------------
+-- Add Item 43
+-------------------------------------------
+            if @ITEM_43 <> ''
+            begin  
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_43),
+               @INITIALQUANTITY * @QUANT_43,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end
+-------------------------------------------
+-- Add Item 44
+-------------------------------------------
+            if @ITEM_44 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_44),
+               @INITIALQUANTITY * @QUANT_44,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID   
+             end               
+-------------------------------------------
+-- Add Item 45
+-------------------------------------------
+            if @ITEM_45 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_45),
+               @INITIALQUANTITY * @QUANT_45,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end               
+-------------------------------------------
+-- Add Item 46
+-------------------------------------------
+            if @ITEM_46 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_46),
+               @INITIALQUANTITY * @QUANT_46,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID 
+             end               
+-------------------------------------------
+-- Add Item 47
+-------------------------------------------
+            if @ITEM_47 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_47),
+               @INITIALQUANTITY * @QUANT_47,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID  
+             end               
+-------------------------------------------
+-- Add Item 48
+-------------------------------------------
+            if @ITEM_48 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_48),
+               @INITIALQUANTITY * @QUANT_48,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID    
+             end               
+-------------------------------------------
+-- Add Item 49
+-------------------------------------------
+            if @ITEM_49 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_49),
+               @INITIALQUANTITY * @QUANT_49,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID
+             end               
+-------------------------------------------
+-- Add Item 50
+-------------------------------------------
+            if @ITEM_50 <> ''
+            begin 
+              insert into USR_CATALOGREVENUE
+              (
+               TRANSACTIONID,
+               CATALOGITEMATTRIBUTEID,
+               QUANTITY,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER
+               )
+               select
+               TRANSACTIONID,
+               (select id from usr_catalogitemattribute where catalogcode = @ITEM_50),
+               @INITIALQUANTITY * @QUANT_50,
+               PRICE,
+               FAIRMARKET,
+               ADDEDBYID,
+               CHANGEDBYID,
+               DATEADDED,
+               DATECHANGED,
+               --TS,
+               --TSLONG,
+               FULFILLED,
+               REVENUEID,
+               ADDRESSID,
+               SHIPTONAME,
+               TAXAMOUNT,
+               CATALOGITEMID,
+               CATALOGTYPEID,
+               FROMNAME,
+               SHIPTOFIRSTNAME,
+               SHIPTOLASTNAME,
+               SHIPTOADDRESS1,
+               SHIPTOADDRESS2,
+               SHIPTOCITY,
+               SHIPTOSTATEID,
+               SHIPTOCOUNTRYID,
+               SHIPTOZIP,
+               SHIPPINGOPTION,
+               SHIPPINGPRICE,
+               SHIPPINGATTENTION,
+               SHIPPINGINSTRUCTIONS,
+               PERSONALNOTE,
+               SHIPPINGPRICEACTUAL,
+               SHIPDATE,
+               ISSHIPPED,
+               TRACKINGNUMBER,
+               FULFILLMENTNUMBER               
+               from USR_CATALOGREVENUE
+               where id = @CATALOGREVENUEID  
+             end               
+               
+             update USR_CATALOGREVENUE
+             set
+             FULFILLED = 1       
+             where id = @CATALOGREVENUEID 
+          end try
+	        begin catch
+		        exec dbo.USP_RAISE_ERROR;
+		        return 1;
+	        end catch
+        end
+		    set @I = @I + 1   		
+	  end
+    --END LOOPING THROUGH TABLE DEFINED ABOVE
+	end try	
+	begin catch
+		exec dbo.USP_RAISE_ERROR;
+		return 1;
+	end catch
+		]]>
+  </CreateProcedureSQL>
+
+  <ParametersFormMetaData>
+    <common:FormMetaData>
+      <common:FormFields>
+        <common:FormField FieldID="KITCODE" Caption="Value" DataType="String" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="CATALOGREVENUESELECTIONID" Caption="Catalog Revenue Selection" DataType="Guid" Required="true" >
+          <common:SearchList SearchListID="1F0E603C-1C55-4E1E-8218-BDB877B2CBE8">
+          </common:SearchList>
+        </common:FormField>
+        <common:FormField FieldID="ITEM_1" Caption="Catalog Item 1 Code" DataType="String" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_1" Caption="Catalog Item 1 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_2" Caption="Catalog Item 2 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_2" Caption="Catalog Item 2 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_3" Caption="Catalog Item 3 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_3" Caption="Catalog Item 3 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_4" Caption="Catalog Item 4 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_4" Caption="Catalog Item 4 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_5" Caption="Catalog Item 5 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_5" Caption="Catalog Item 5 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_6" Caption="Catalog Item 6 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_6" Caption="Catalog Item 6 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_7" Caption="Catalog Item 7 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_7" Caption="Catalog Item 7 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_8" Caption="Catalog Item 8 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_8" Caption="Catalog Item 8 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_9" Caption="Catalog Item 9 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_9" Caption="Catalog Item 9 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_10" Caption="Catalog Item 10 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_10" Caption="Catalog Item 10 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_11" Caption="Catalog Item 11 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_11" Caption="Catalog Item 11 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_12" Caption="Catalog Item 12 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_12" Caption="Catalog Item 12 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_13" Caption="Catalog Item 13 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_13" Caption="Catalog Item 13 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_14" Caption="Catalog Item 14 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_14" Caption="Catalog Item 14 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_15" Caption="Catalog Item 15 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_15" Caption="Catalog Item 15 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_16" Caption="Catalog Item 16 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_16" Caption="Catalog Item 16 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_17" Caption="Catalog Item 17 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_17" Caption="Catalog Item 17 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_18" Caption="Catalog Item 18 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_18" Caption="Catalog Item 18 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_19" Caption="Catalog Item 19 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_19" Caption="Catalog Item 19 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_20" Caption="Catalog Item 20 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_20" Caption="Catalog Item 20 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_21" Caption="Catalog Item 21 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_21" Caption="Catalog Item 21 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_22" Caption="Catalog Item 22 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_22" Caption="Catalog Item 22 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_23" Caption="Catalog Item 23 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_23" Caption="Catalog Item 23 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_24" Caption="Catalog Item 24 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_24" Caption="Catalog Item 24 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_25" Caption="Catalog Item 25 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_25" Caption="Catalog Item 25 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_26" Caption="Catalog Item 26 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_26" Caption="Catalog Item 26 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_27" Caption="Catalog Item 27 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_27" Caption="Catalog Item 27 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_28" Caption="Catalog Item 28 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_28" Caption="Catalog Item 28 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_29" Caption="Catalog Item 29 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_29" Caption="Catalog Item 29 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_30" Caption="Catalog Item 30 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_30" Caption="Catalog Item 30 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_31" Caption="Catalog Item 31 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_31" Caption="Catalog Item 31 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_32" Caption="Catalog Item 32 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_32" Caption="Catalog Item 32 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_33" Caption="Catalog Item 33 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_33" Caption="Catalog Item 33 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_34" Caption="Catalog Item 34 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_34" Caption="Catalog Item 34 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_35" Caption="Catalog Item 35 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_35" Caption="Catalog Item 35 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_36" Caption="Catalog Item 36 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_36" Caption="Catalog Item 36 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_37" Caption="Catalog Item 37 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_37" Caption="Catalog Item 37 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_38" Caption="Catalog Item 38 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_38" Caption="Catalog Item 38 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_39" Caption="Catalog Item 39 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_39" Caption="Catalog Item 39 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_40" Caption="Catalog Item 40 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_40" Caption="Catalog Item 40 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_41" Caption="Catalog Item 41 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_41" Caption="Catalog Item 41 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_42" Caption="Catalog Item 42 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_42" Caption="Catalog Item 42 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_43" Caption="Catalog Item 43 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_43" Caption="Catalog Item 43 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_44" Caption="Catalog Item 44 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_44" Caption="Catalog Item 44 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_45" Caption="Catalog Item 45 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_45" Caption="Catalog Item 45 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_46" Caption="Catalog Item 46 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_46" Caption="Catalog Item 46 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_47" Caption="Catalog Item 47 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_47" Caption="Catalog Item 47 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_48" Caption="Catalog Item 48 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_48" Caption="Catalog Item 48 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_49" Caption="Catalog Item 49 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_49" Caption="Catalog Item 49 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+        <common:FormField FieldID="ITEM_50" Caption="Catalog Item 50 Code" DataType="String" Required="false" >
+        </common:FormField>
+        <common:FormField FieldID="QUANT_50" Caption="Catalog Item 50 Quantity" DataType="Integer" Required="true" >
+        </common:FormField>
+      </common:FormFields>
+      <common:WebUIComponent>
+        <common:WebUI>
+          <common:DefaultWebUI />
+        </common:WebUI>
+      </common:WebUIComponent>
+    </common:FormMetaData>
+  </ParametersFormMetaData>
+
+</GlobalChangeSpec>

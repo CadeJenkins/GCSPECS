@@ -1,0 +1,343 @@
+﻿<GlobalChangeSpec 
+	xmlns="bb_appfx_globalchange"  
+	xmlns:common="bb_appfx_commontypes"
+	ID="aa33151e-65f7-4388-864a-6e2f974ee583"
+	Name="Modify Account Strings Reversal Credits Global Change"
+	Description="Update the account strings for specific instances (Unposted Reversal Credits only)."
+	Author="HEIFERNET\khamling"
+	DisplayName="Modify Account Strings Reversal Credits Global Change"
+	GlobalChangeFolder="Revenue"
+	SPName="USP_GLOBALCHANGE_HEIFER_MODIFYACCOUNTS_CREDITS"
+>
+
+	<!-- describe the SP that performs the global change operation -->
+	<CreateProcedureSQL>
+		<![CDATA[
+    create procedure dbo.USP_GLOBALCHANGE_HEIFER_MODIFYACCOUNTS_CREDITS
+    (
+    @CHANGEAGENTID uniqueidentifier = null,
+    @ASOF as datetime = null,
+    @NUMBERADDED int = 0 output,
+    @NUMBEREDITED int = 0 output,
+    @NUMBERDELETED int = 0 output,
+    @IDSETREGISTERID uniqueidentifier,
+    @ACCOUNTS xml
+    )
+    as
+    set nocount off;
+
+    declare @CURRENTDATE datetime
+    set @CURRENTDATE = getdate();
+    set @NUMBERADDED = 0;
+    set @NUMBEREDITED = 0;
+    set @NUMBERDELETED = 0;
+
+    if @CHANGEAGENTID is null
+    exec dbo.USP_CHANGEAGENT_GETORCREATECHANGEAGENT @CHANGEAGENTID output;
+
+    begin try
+
+    declare @IDSETREGISTER table (ID uniqueidentifier primary key)
+    insert into @IDSETREGISTER
+    select * from dbo.ufn_IdSetReader_GetResults_guId(@IDSETREGISTERID)
+
+    declare @CHANGES table
+    (
+    SEQUENCE int identity,
+    ACCOUNT nvarchar(100),
+    SEGMENT1 nvarchar(100)
+    )
+
+    declare @handle int
+    exec sp_xml_preparedocument @handle output, @ACCOUNTS
+
+    insert into @CHANGES (ACCOUNT, SEGMENT1)
+    select SEARCH, SEGMENT1 from openxml(@handle, '/ACCOUNTS/ITEM') with (
+    SEARCH nvarchar(100) 'SEARCH',
+    SEGMENT1 nvarchar(100) 'SEGEMENT1'
+    )
+
+    declare @COUNTER int
+    declare @MAX int
+    declare @ACCOUNT nvarchar(100)
+    declare @SEGMENT1 nvarchar(100)
+
+    set @COUNTER = 1
+    set @MAX = (select MAX(SEQUENCE) from @CHANGES)
+
+    while @COUNTER <= @MAX
+    begin
+    select @ACCOUNT = ACCOUNT, @SEGMENT1 = SEGMENT1 from @CHANGES where SEQUENCE = @COUNTER
+   
+ --Update the transaction
+          update gltransaction
+          set 
+            ACCOUNT=@SEGMENT1, 
+            glaccountid=(select id from glaccount where accountnumber=@SEGMENT1)
+          where
+           id in
+            (
+              select glt.id
+              from
+                revenuegldistribution dist
+              inner join
+                gltransaction glt on glt.id = dist.gltransactionid
+              inner join 
+	              dbo.GLTRANSACTION GLT2 on glt.ID = GLT2.REVERSEDGLTRANSACTIONID    
+              inner join @IDSETREGISTER I on DIST.REVENUEID = I.ID	
+              where
+              glt2.account like @ACCOUNT
+              and GLT2.TRANSACTIONTYPE='Credit'
+              and GLT2.POSTSTATUSCODE = 1
+            )
+            
+    --Update the reverse transaction
+					update GLTRANSACTION 
+					set ACCOUNT=@SEGMENT1,
+					glaccountid=(select id from glaccount where accountnumber=@SEGMENT1)
+          where reversedgltransactionid in
+          (
+          select gl1.id
+					from 
+						dbo.REVENUEGLDISTRIBUTION DIST
+					inner join 
+						dbo.GLTRANSACTION GL1 on DIST.GLTRANSACTIONID = GL1.ID
+					inner join 
+						dbo.GLTRANSACTION GL2 on GL1.ID = GL2.REVERSEDGLTRANSACTIONID
+					inner join @IDSETREGISTER I on DIST.REVENUEID = I.ID						
+					where 
+						GL2.ACCOUNT like @ACCOUNT
+						and GL2.TRANSACTIONTYPE='Credit'
+						and GL2.POSTSTATUSCODE = 1
+          )
+            
+       --Update the GL distribution
+          update revenuegldistribution
+          set 
+            ACCOUNT=@SEGMENT1 
+          where	ID IN
+          (		              
+			      select dist.id
+              from
+                revenuegldistribution dist
+              inner join
+                gltransaction glt on glt.id = dist.gltransactionid
+              inner join 
+	              dbo.GLTRANSACTION GLT2 on glt.ID = GLT2.REVERSEDGLTRANSACTIONID   
+              inner join @IDSETREGISTER I on DIST.REVENUEID = I.ID	
+              where
+              dist.account like @ACCOUNT
+              and GLT2.TRANSACTIONTYPE='Credit'
+              and GLT2.POSTSTATUSCODE = 1
+          )            
+            
+          set @NUMBEREDITED = @NUMBEREDITED+@@ROWCOUNT;            
+						
+					update GLTRANSACTION 
+					set ACCOUNT=@SEGMENT1,
+					glaccountid=(select id from glaccount where accountnumber=@SEGMENT1)
+          where reversedgltransactionid in
+          (
+          select gl1.id
+					from 
+						dbo.STOCKSALEGLDISTRIBUTION DIST
+					inner join 
+						dbo.GLTRANSACTION GL1 on DIST.GLTRANSACTIONID = GL1.ID
+					inner join 
+						dbo.GLTRANSACTION GL2 on GL1.ID = GL2.REVERSEDGLTRANSACTIONID
+					inner join @IDSETREGISTER I on DIST.REVENUEID = I.ID		
+					where 
+						GL2.ACCOUNT like @ACCOUNT
+						and GL2.TRANSACTIONTYPE='Credit'
+						and GL2.POSTSTATUSCODE = 1	
+         )
+						
+          set @NUMBEREDITED = @NUMBEREDITED+@@ROWCOUNT; 
+            
+					update GLTRANSACTION 
+					set ACCOUNT=@SEGMENT1,
+					glaccountid=(select id from glaccount where accountnumber=@SEGMENT1)
+          where reversedgltransactionid in
+          (
+          select gl1.id
+					from 
+						dbo.PROPERTYDETAILGLDISTRIBUTION DIST
+					inner join 
+						dbo.GLTRANSACTION GL1 on DIST.GLTRANSACTIONID = GL1.ID
+					inner join 
+						dbo.GLTRANSACTION GL2 on GL1.ID = GL2.REVERSEDGLTRANSACTIONID
+					inner join @IDSETREGISTER I on DIST.REVENUEID = I.ID		
+					where 
+						GL2.ACCOUNT like @ACCOUNT
+						and GL2.TRANSACTIONTYPE='Credit'
+						and GL2.POSTSTATUSCODE = 1	
+         )            
+						
+          set @NUMBEREDITED = @NUMBEREDITED+@@ROWCOUNT; 
+            
+					update GLTRANSACTION 
+					set ACCOUNT=@SEGMENT1,
+					glaccountid=(select id from glaccount where accountnumber=@SEGMENT1)
+          where reversedgltransactionid in
+          (
+          select gl1.id
+					from 
+						dbo.WRITEOFFGLDISTRIBUTION DIST
+					inner join 
+						dbo.GLTRANSACTION GL1 on DIST.GLTRANSACTIONID = GL1.ID
+					inner join 
+						dbo.GLTRANSACTION GL2 on GL1.ID = GL2.REVERSEDGLTRANSACTIONID
+					inner join @IDSETREGISTER I on DIST.REVENUEID = I.ID		
+					where 
+						GL2.ACCOUNT like @ACCOUNT
+						and GL2.TRANSACTIONTYPE='Credit'
+						and GL2.POSTSTATUSCODE = 1	
+         )                  
+						
+          set @NUMBEREDITED = @NUMBEREDITED+@@ROWCOUNT; 	
+            
+					update GLTRANSACTION 
+					set ACCOUNT=@SEGMENT1,
+					glaccountid=(select id from glaccount where accountnumber=@SEGMENT1)
+          where reversedgltransactionid in
+          (
+          select gl1.id
+					from 
+						dbo.GIFTAIDGLDISTRIBUTION DIST
+					inner join 
+						dbo.GLTRANSACTION GL1 on DIST.GLTRANSACTIONID = GL1.ID
+					inner join 
+						dbo.GLTRANSACTION GL2 on GL1.ID = GL2.REVERSEDGLTRANSACTIONID
+					inner join @IDSETREGISTER I on DIST.REVENUEID = I.ID		
+					where 
+						GL2.ACCOUNT like @ACCOUNT
+						and GL2.TRANSACTIONTYPE='Credit'
+						and GL2.POSTSTATUSCODE = 1	
+         )                     
+						
+          set @NUMBEREDITED = @NUMBEREDITED+@@ROWCOUNT;           
+            
+					update GLTRANSACTION 
+					set ACCOUNT=@SEGMENT1,
+					glaccountid=(select id from glaccount where accountnumber=@SEGMENT1)
+          where reversedgltransactionid in
+          (
+          select gl1.id
+					from 
+						dbo.BENEFITGLDISTRIBUTION DIST
+					inner join 
+						dbo.GLTRANSACTION GL1 on DIST.GLTRANSACTIONID = GL1.ID
+					inner join 
+						dbo.GLTRANSACTION GL2 on GL1.ID = GL2.REVERSEDGLTRANSACTIONID
+					inner join @IDSETREGISTER I on DIST.REVENUEID = I.ID		
+					where 
+						GL2.ACCOUNT like @ACCOUNT
+						and GL2.TRANSACTIONTYPE='Credit'
+						and GL2.POSTSTATUSCODE = 1	
+         )               
+						
+          set @NUMBEREDITED = @NUMBEREDITED+@@ROWCOUNT; 
+
+					update GLTRANSACTION 
+					set ACCOUNT=@SEGMENT1,
+					glaccountid=(select id from glaccount where accountnumber=@SEGMENT1)
+          where reversedgltransactionid in
+          (
+          select gl1.id
+					from 
+						dbo.GIFTFEEGLDISTRIBUTION DIST
+					inner join 
+						dbo.GLTRANSACTION GL1 on DIST.GLTRANSACTIONID = GL1.ID
+					inner join 
+						dbo.GLTRANSACTION GL2 on GL1.ID = GL2.REVERSEDGLTRANSACTIONID
+					inner join @IDSETREGISTER I on DIST.REVENUEID = I.ID		
+					where 
+						GL2.ACCOUNT like @ACCOUNT
+						and GL2.TRANSACTIONTYPE='Credit'
+						and GL2.POSTSTATUSCODE = 1	
+         )                
+						
+          set @NUMBEREDITED = @NUMBEREDITED+@@ROWCOUNT; 
+    
+					update GLTRANSACTION 
+					set ACCOUNT=@SEGMENT1,
+					glaccountid=(select id from glaccount where accountnumber=@SEGMENT1)
+          where reversedgltransactionid in
+          (
+          select gl1.id
+					from 
+						dbo.AUCTIONPURCHASEGLDISTRIBUTION DIST
+					inner join 
+						dbo.GLTRANSACTION GL1 on DIST.GLTRANSACTIONID = GL1.ID
+					inner join 
+						dbo.GLTRANSACTION GL2 on GL1.ID = GL2.REVERSEDGLTRANSACTIONID
+					inner join @IDSETREGISTER I on DIST.REVENUEID = I.ID		
+					where 
+						GL2.ACCOUNT like @ACCOUNT
+						and GL2.TRANSACTIONTYPE='Credit'
+						and GL2.POSTSTATUSCODE = 1	
+         )              
+						
+          set @NUMBEREDITED = @NUMBEREDITED+@@ROWCOUNT; 
+            
+					update GLTRANSACTION 
+					set ACCOUNT=@SEGMENT1,
+					glaccountid=(select id from glaccount where accountnumber=@SEGMENT1)
+          where reversedgltransactionid in
+          (
+          select gl1.id
+					from 
+						dbo.UNREALIZEDGAINLOSSGLDISTRIBUTION DIST
+					inner join 
+						dbo.GLTRANSACTION GL1 on DIST.GLTRANSACTIONID = GL1.ID
+					inner join 
+						dbo.GLTRANSACTION GL2 on GL1.ID = GL2.REVERSEDGLTRANSACTIONID
+					inner join @IDSETREGISTER I on DIST.REVENUEID = I.ID		
+					where 
+						GL2.ACCOUNT like @ACCOUNT
+						and GL2.TRANSACTIONTYPE='Credit'
+						and GL2.POSTSTATUSCODE = 1	
+         )              
+
+          set @NUMBEREDITED = @NUMBEREDITED+@@ROWCOUNT; 
+   
+   
+    set @COUNTER = @COUNTER + 1
+    end
+
+    end try
+
+    begin catch
+    exec dbo.USP_RAISE_ERROR;
+    return 1;
+    end catch
+		]]>
+	</CreateProcedureSQL>
+
+  <ParametersFormMetaData>
+    <FormMetaData xmlns="bb_appfx_commontypes">
+      <FormFields>
+        <FormField FieldID="IDSETREGISTERID" DataType="Guid" Required="true" Caption="Revenue selection">
+          <SearchList SearchListID="1f0e603c-1c55-4e1e-8218-bdb877b2cbe8">
+            <FormFieldOverrides>
+              <FormFieldOverride FieldID="RECORDTYPE" Caption="Record type" ReadOnly="true" DefaultValueText="Revenue" />
+            </FormFieldOverrides>
+          </SearchList>
+        </FormField>
+        <FormField FieldID="ACCOUNTS" DataType="XML" Required="true" Caption="Replacement values">
+          <Collection>
+            <Fields>
+              <FormField FieldID="SEARCH" Required="true" Caption="Search" />
+              <FormField FieldID="SEGEMENT1" Required="true" MaxLength="44" Caption="Account string" />
+            </Fields>
+          </Collection>
+        </FormField>
+      </FormFields>
+      <common:WebUIComponent>
+        <common:WebUI>
+          <common:DefaultWebUI />
+        </common:WebUI>
+      </common:WebUIComponent>
+    </FormMetaData>
+  </ParametersFormMetaData>
+</GlobalChangeSpec>

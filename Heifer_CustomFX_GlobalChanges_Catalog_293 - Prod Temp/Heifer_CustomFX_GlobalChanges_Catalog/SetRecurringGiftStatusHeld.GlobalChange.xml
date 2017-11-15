@@ -1,0 +1,227 @@
+﻿  <GlobalChangeSpec xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xmlns="bb_appfx_globalchange" ID="5b1dc1a8-38f2-47e5-b67e-0179424e38a9" 
+                    Name="Set recurring gift status to Held"
+            Description="Sets the recurring gift status on a recurring gift revenue schedule record.  Heifer version includes Held status to dropdown"
+            Author="HEIFERNET\khamling" SPName="USP_GLOBALCHANGE_SETRECURRINGGIFTSTATUS_HEIFER" DisplayName="Set recurring gift status to Held" 
+                    DisplayNameResourceKey="$$set_recurring_gift_status" GlobalChangeFolder="Revenue" GlobalChangeFolderResourceKey="$$revenue">
+    <InstalledProductList xmlns="bb_appfx_commontypes">
+      <InstalledProduct ID="3117d2c8-7f46-42f2-abeb-b654f2f63046" />
+    </InstalledProductList>
+    <ResourceFile AssemblyName="Blackbaud.AppFx.Fundraising.Catalog.dll" ClassName="Blackbaud.AppFx.Fundraising.Catalog.SetRecurringGiftStatus.GlobalChange" />
+    <CreateProcedureSQL>
+
+      create procedure dbo.USP_GLOBALCHANGE_SETRECURRINGGIFTSTATUS_HEIFER
+      (
+      @IDSETREGISTERID uniqueidentifier,
+      @STATUSCODE tinyint,
+      @CHANGEAGENTID uniqueidentifier = null,
+      @ASOF as datetime = null,
+      @NUMBERADDED int = 0 output,
+      @NUMBEREDITED int = 0 output,
+      @NUMBERDELETED int = 0 output,
+      @CURRENTAPPUSERID uniqueidentifier = null,
+      @REASONCODEID uniqueidentifier = null
+      )
+      as
+      set nocount off;
+
+      -- Prevent existing instances of the global change to set the RGs status to Held when upgrading to 4.0
+      -- This will be re-enabled when the Skip functionality is implemented to address this global change.
+      if @STATUSCODE = 1
+      raiserror('BBERR_HELDSTATUS_NOTSUPPORTED',13,1);
+
+      if @REASONCODEID is null
+      raiserror('BBERR_REASONCODE_REQUIRED',13,1);
+
+      set @NUMBERADDED = 0;
+      set @NUMBEREDITED = 0;
+      set @NUMBERDELETED = 0;
+
+      declare @CHANGEDATE datetime;
+      set @CHANGEDATE = getdate();
+
+      if @CHANGEAGENTID is null
+      exec dbo.USP_CHANGEAGENT_GETORCREATECHANGEAGENT @CHANGEAGENTID output;
+
+      declare @IDS table
+      (
+      ID uniqueidentifier
+      );
+      insert into @IDS(ID)
+      select ID from dbo.UFN_IDSETREADER_GETRESULTS_GUID(@IDSETREGISTERID);
+
+      if @STATUSCODE in(0,1,5)
+      begin
+      if exists(
+      select
+      RS.ID
+      from
+      dbo.REVENUESCHEDULE RS
+      inner join @IDS as SELECTION on SELECTION.ID = RS.ID
+      where
+      not (RS.NEXTTRANSACTIONDATE is null or RS.NEXTTRANSACTIONDATE &lt;= RS.ENDDATE)
+      )
+      begin
+      raiserror('BBERR_RECURRINGGIFT_INVALIDSTATUSFORENDDATE: You cannot set a recurring gift status to Active, Lapsed, or Held if the next transaction date has passed the end date.',13,1);
+      return 1;
+      end
+
+      if exists(
+      select
+      RS.ID
+      from
+      dbo.REVENUESCHEDULE RS
+      inner join @IDS as SELECTION on SELECTION.ID = RS.ID
+      inner join dbo.SPONSORSHIPRECURRINGADDITIONALGIFT SRAG1 on SRAG1.REVENUEID = RS.ID
+      inner join dbo.SPONSORSHIPRECURRINGADDITIONALGIFT SRAG2 on SRAG2.SPONSORSHIPID = SRAG1.SPONSORSHIPID
+      where SRAG2.STATUSCODE in(0,1,5)
+      and SRAG2.ID &lt;&gt; SRAG1.ID
+      )
+      begin
+      raiserror('BBERR_RECURRINGGIFT_INVALIDSTATUSFORSPRAG: You cannot set a sponsorship recurring additional gift status to Active, Lapsed, or Held if another sponsorship recurring additional exists on the same sponsorship that is already Active, Lapsed or Held.',13,1);
+      return 1;
+      end
+      end
+
+      begin try
+      declare @USERSITES table
+      (
+      SITEID uniqueidentifier
+      );
+
+      insert into @USERSITES(SITEID)
+      select SITEID from dbo.UFN_SITESFORUSERONFEATURE(@CURRENTAPPUSERID, '3269A1D1-31CB-4D28-945C-B7623A3EFCCA', 4);
+
+      declare @ISSYSADMIN bit = dbo.UFN_APPUSER_ISSYSADMIN(@CURRENTAPPUSERID);
+
+      /* JamesWill WI174458 2011-12-02
+      The RecurringGiftStatus.Edit form does a lot of work (creating, deleting, fixing up installments, etc.) To recreate that,
+      the most straightforward method is to just cursor over everything this would change and call the SP to do all the work.
+
+      We ran some performance tests and there's not a huge penalty for this for 10k records. Should this be an issue in the future,
+      we will need to figure out how to turn the work that the SP does into set-based stuff.
+      */
+      declare @RECURRINGGIFTID uniqueidentifier = null;
+      declare RECURRINGGIFTS_CURSOR cursor local fast_forward for
+      select
+      REVENUE.ID
+      from
+      dbo.REVENUESCHEDULE
+      inner join dbo.REVENUE on REVENUE.ID = REVENUESCHEDULE.ID
+      inner join @IDS SELECTION on SELECTION.ID = REVENUESCHEDULE.ID
+      inner join dbo.REVENUESPLIT on REVENUESPLIT.REVENUEID = REVENUESCHEDULE.ID
+      inner join dbo.UFN_SITEID_MAPFROM_REVENUESPLITID_BULK() REVENUESITE on REVENUESITE.ID = REVENUESPLIT.ID
+      left join dbo.SPONSORSHIP on SPONSORSHIP.REVENUESPLITID = REVENUESPLIT.ID
+      where
+      REVENUESCHEDULE.STATUSCODE &lt;&gt; @STATUSCODE
+      and REVENUE.TRANSACTIONTYPECODE = 2
+      and SPONSORSHIP.ID is null
+      and (
+      @ISSYSADMIN = 1
+      or exists(
+      select 1
+      from
+      @USERSITES USERSITES
+      where
+      USERSITES.SITEID = REVENUESITE.SITEID
+      or (USERSITES.SITEID is null and REVENUESITE.SITEID is null)
+      )
+      );
+
+      open RECURRINGGIFTS_CURSOR;
+      fetch next from RECURRINGGIFTS_CURSOR into @RECURRINGGIFTID;
+      while @@FETCH_STATUS = 0
+      begin
+      declare @SKIPPEDINSTALLMENTID uniqueidentifier;
+
+      -- If updating to Active or Lapsed, look for installments to undo.
+      if @STATUSCODE in(0,5)
+      exec dbo.USP_DATAFORMTEMPLATE_EDITLOAD_RECURRINGGIFTSTATUS
+      @ID = @RECURRINGGIFTID,
+      @SKIPPEDINSTALLMENTID = @SKIPPEDINSTALLMENTID output;
+
+      /*this SP is used by both this global change and the RecurringGiftStatus.Edit form. Any changes to "the work" done when changing
+      the status on a recurring gift should be done in USP_RECURRINGGIFT_EDITSTATUS so both the form and the global change pick up
+      the changes. */
+
+      exec dbo.USP_RECURRINGGIFT_EDITSTATUS @RECURRINGGIFTID, @STATUSCODE, @CHANGEAGENTID, @CHANGEDATE, @REASONCODEID, null, @SKIPPEDINSTALLMENTID;
+      set @NUMBEREDITED = @NUMBEREDITED + 1;
+
+      fetch next from RECURRINGGIFTS_CURSOR into @RECURRINGGIFTID;
+      end
+
+      close RECURRINGGIFTS_CURSOR;
+      deallocate RECURRINGGIFTS_CURSOR;
+      end try
+
+      begin catch
+      exec dbo.USP_RAISE_ERROR;
+      return 1;
+      end catch
+
+
+    </CreateProcedureSQL>
+    <ExpectedDBExceptions>
+      <CustomExceptions xmlns="bb_appfx_commontypes">
+        <Exception SearchText="UFN_IDSETREADER_GETRESULTS_GUID" CustomErrorMsgResourceKey="$$an_invalid_selection_was_specified_for_this_global_change">
+          <CustomErrorMsg>An invalid selection was specified for this global change.</CustomErrorMsg>
+        </Exception>
+        <Exception SearchText="BBERR_RECURRINGGIFT_INVALIDSTATUSFORENDDATE" CustomErrorMsgResourceKey="$$you_cannot_set_a_recurring_gift_status_to_active,_lapsed,_or_held_if_the_next_transaction_date_has_passed_the_end_date">
+          <CustomErrorMsg>You cannot set a recurring gift status to Active, Lapsed, or Held if the next transaction date has passed the end date.</CustomErrorMsg>
+        </Exception>
+        <Exception SearchText="BBERR_RECURRINGGIFT_INVALIDSTATUSFORSPRAG" CustomErrorMsgResourceKey="$$you_cannot_set_a_sponsorship_recurring_additional_gift_status_to_active,_lapsed,_or_held_if_another_sponsorship_recurring_additional_exists_on_the_same_sponsorship_that_is_already_active,_lapsed_or_held">
+          <CustomErrorMsg>You cannot set a sponsorship recurring additional gift status to Active, Lapsed, or Held if another sponsorship recurring additional exists on the same sponsorship that is already Active, Lapsed or Held.</CustomErrorMsg>
+        </Exception>
+        <Exception SearchText="BBERR_HELDSTATUS_NOTSUPPORTED" CustomErrorMsgResourceKey="$$setting_multiple_gifts_to_held_status_is_not_supported">
+          <CustomErrorMsg>Setting multiple gifts to Held status is not supported.</CustomErrorMsg>
+        </Exception>
+        <Exception SearchText="BBERR_REASONCODE_REQUIRED" CustomErrorMsgResourceKey="$$a_reason_code_is_now_required_for_recurring_gift_status_changes">
+          <CustomErrorMsg>A reason code is now required for recurring gift status changes.</CustomErrorMsg>
+        </Exception>
+      </CustomExceptions>
+    </ExpectedDBExceptions>
+    <ParametersFormMetaData>
+      <FormMetaData xmlns="bb_appfx_commontypes">
+        <FormFields>
+          <FormField FieldID="IDSETREGISTERID" DataType="Guid" Required="true" Caption="Selection" CaptionResourceKey="$$selection">
+            <SearchList SearchListID="98d0070e-c4a7-495b-a438-2ac12da79068" EnableQuickFind="true">
+              <FormFieldOverrides>
+                <FormFieldOverride FieldID="RECORDTYPEID" Caption="Record type" ReadOnly="true" DefaultValueText="Fields!RECORDTYPEID" />
+              </FormFieldOverrides>
+            </SearchList>
+          </FormField>
+          <FormField FieldID="RECORDTYPEID" DataType="Guid" ReadOnly="true" Hidden="true" />
+          <FormField FieldID="STATUSCODE" DataType="TinyInt" Required="true" Caption="Status" CaptionResourceKey="$$status">
+            <ValueList>
+              <Items>
+                <Item LabelResourceKey="$$held">
+                  <Value>1</Value>
+                  <Label>Held</Label>
+                </Item>
+              </Items>
+            </ValueList>
+          </FormField>
+          <FormField FieldID="REASONCODEID" DataType="Guid" Required="true" Caption="Reason code" CaptionResourceKey="$$reason_code">
+            <SimpleDataList SimpleDataListID="b894d7f9-d108-4528-a37e-ab620a40ad75" EnableTypeAhead="false">
+              <Params>
+                <Param ID="TYPE">
+                  <Value>1</Value>
+                </Param>
+              </Params>
+            </SimpleDataList>
+          </FormField>
+        </FormFields>
+        <WebUIComponent>
+          
+          <WebUI>
+            <ExternalResource Url="browser/htmlforms/fundraising/SetRecurringGiftStatus.html" />
+          </WebUI>
+        </WebUIComponent>
+        <UIActions>
+          <UIAction ActionID="EDITQUERY">
+            <ShowEditQueryForm LinkedFieldId="IDSETREGISTERID" />
+          </UIAction>
+        </UIActions>
+      </FormMetaData>
+    </ParametersFormMetaData>
+  </GlobalChangeSpec>

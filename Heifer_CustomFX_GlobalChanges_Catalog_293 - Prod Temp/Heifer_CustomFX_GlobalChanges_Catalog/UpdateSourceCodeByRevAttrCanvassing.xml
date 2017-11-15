@@ -1,0 +1,153 @@
+﻿  <GlobalChangeSpec xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    ID="f6e3877e-2bbf-4b25-a14b-dbbf32e88d90"  Name="Update Source Code By Revenue Attribute Canvassing"
+                    Description="Sets source codes based on revenue attribute value, based on revenue selection"
+                    Author="HEIFERNET\khamling" SPName="USR_USP_GLOBALCHANGE_SOURCECODES_BY_REVATTRVALUE_CANVASSING" DisplayName="Update Source Code By Revenue Attribute Canvassing"
+                    GlobalChangeFolder="Revenue" xmlns="bb_appfx_globalchange">
+    <CreateProcedureSQL>
+      <![CDATA[
+      create procedure dbo.USR_USP_GLOBALCHANGE_SOURCECODES_BY_REVATTRVALUE_CANVASSING
+      (
+      @CHANGEAGENTID uniqueidentifier = null,
+      @ASOF as datetime = null,
+      @NUMBERADDED int = 0 output,
+      @NUMBEREDITED int = 0 output,
+      @NUMBERDELETED int = 0 output,
+      @SOURCECODES xml,
+      @ATTRIBUTECATEGORYID UNIQUEIDENTIFIER,
+      @REVENUESELECTIONID UNIQUEIDENTIFIER
+      )
+      as
+      set nocount off;
+
+      declare @I_MAX integer
+      declare @SC_COUNT integer
+      declare @REVENUEID uniqueidentifier      
+      declare @CURRENTDATE datetime
+      set @CURRENTDATE = getdate();
+      set @NUMBERADDED = 0;
+      set @NUMBEREDITED = 0;
+      set @NUMBERDELETED = 0;
+
+      if @CHANGEAGENTID is null
+      exec dbo.USP_CHANGEAGENT_GETORCREATECHANGEAGENT @CHANGEAGENTID output;
+
+    begin try
+      -- do the global change operation here, and set @NUMBERADDED, @NUMBEREDITED, and/or @NUMBERDELETED as appropriate
+
+      DECLARE @REVENUESELECTION TABLE (
+      id UNIQUEIDENTIFIER PRIMARY KEY);
+
+      INSERT INTO @REVENUESELECTION
+      SELECT id
+      FROM   dbo.Ufn_idsetreader_getresults_guid(@REVENUESELECTIONID)
+
+      declare @SCTEMP table
+      (
+      AttrValue uniqueidentifier,
+      SourceCode nvarchar(30)
+      )
+
+      declare @handle int
+      exec sp_xml_preparedocument @handle output, @SOURCECODES
+
+
+      insert into @SCTEMP
+      select AttrValue, SourceCode from openxml(@handle, '/SOURCECODES/ITEM') with (
+      ATTRVALUE uniqueidentifier 'ATTRVALUE',
+      SOURCECODE nvarchar(30) 'SOURCECODE'
+      )
+      
+      CREATE TABLE #SC
+      (
+      AttrValue uniqueidentifier,
+      SourceCode nvarchar(30)
+      )
+      INSERT #SC SELECT * FROM @SCTEMP
+
+--NEED TO GET ATTRIBUTE TABLE FROM TYPE ENTERED.
+--testing with "MSource" attribute for now.
+DECLARE @ATTRTABLE VARCHAR(100);
+DECLARE @SQL VARCHAR(2000);
+
+select @ATTRTABLE = replace('ATTRIBUTE' + convert(nvarchar(100),id),'-','') from attributecategory 
+where attributerecordtypeid in 
+(
+  select id from attributerecordtype where recordtypeid in
+  (
+    select id from recordtype where name='Revenue'           
+  )
+)
+and attributecategory.id = @ATTRIBUTECATEGORYID
+
+      CREATE TABLE #RS(id UNIQUEIDENTIFIER)
+      INSERT #RS SELECT * FROM @REVENUESELECTION
+
+--NEEDED TO PREVENT UPDATE QUERY BELOW FROM TRYING TO SET SOURCECODE=NULL IF THE ATTRIBUTE DOESN'T EXIST ON THE REVENUE TRANSACTION
+set @SQL = 'delete from #RS where id not in (select id from '+ @ATTRTABLE +' )'
+EXEC (@SQL)
+      
+--      update
+--      REVENUE
+--      set
+--      SOURCECODE = (select S.SOURCECODE FROM attributeA4A371DFAB784DEF84762248DA5D4D2B ATTR join @SCTEMP S on ATTR.VALUE = S.ATTRVALUE where ATTR.ID = REVENUE.ID)
+--      where
+--      ID in (select ID from @REVENUESELECTION)
+      
+--      update
+--      REVENUE
+--      set
+--      SOURCECODE = (select S.SOURCECODE FROM @ATTRTABLE ATTR join @SCTEMP S on ATTR.VALUE = S.ATTRVALUE where ATTR.ID = REVENUE.ID)
+--      where
+--      ID in (select ID from @REVENUESELECTION)
+      
+      set @SQL = 'update REVENUE set SOURCECODE = (select upper(S.SOURCECODE) FROM '+ @ATTRTABLE +' ATTR join #SC S on ATTR.canvassingcitiescodeid = S.ATTRVALUE where ATTR.ID = REVENUE.ID) where ID in (select ID from #RS)'                
+      EXEC (@SQL)
+      
+      set @NUMBEREDITED=@@ROWCOUNT          
+
+      DROP TABLE #SC
+      DROP TABLE #RS
+    end try
+
+    begin catch
+      exec dbo.USP_RAISE_ERROR;
+      return 1;
+    end catch
+		]]>
+    </CreateProcedureSQL>
+    <ParametersFormMetaData>
+      <FormMetaData xmlns="bb_appfx_commontypes">
+        <FormFields>
+          <FormField FieldID="ATTRIBUTECATEGORYID" DataType="Guid" Required="true" Caption="Category" CaptionResourceKey="$$category">
+            <SimpleDataList SimpleDataListID="958132a3-762a-4844-b7a1-f3a3098da95a">
+              <Params>
+                <Param ID="RECORDTYPE">
+                  <Value>REVENUE</Value>
+                </Param>
+              </Params>
+            </SimpleDataList>
+          </FormField>
+          <FormField FieldID="SOURCECODES" DataType="XML" Required="true" Caption="Source map">
+            <Collection>
+              <Fields>
+                <FormField FieldID="AttrValue" DataType="Guid" Required="true" Caption="City">
+                  <SimpleDataList SimpleDataListID="befa804c-4f8f-458b-90f4-98087826f23e">
+                  </SimpleDataList>
+                </FormField>
+                <FormField FieldID="SourceCode" Required="true" Caption="Source Code" />
+              </Fields>
+            </Collection>
+          </FormField>
+          <FormField FieldID="REVENUESELECTIONID" Caption="Revenue Selection" DataType="Guid" Required="true" >
+            <SearchList SearchListID="1F0E603C-1C55-4E1E-8218-BDB877B2CBE8">
+            </SearchList>
+          </FormField>
+        </FormFields>
+        <WebUIComponent>
+          <WebUI>
+            <DefaultWebUI/>
+          </WebUI>
+        </WebUIComponent>
+      </FormMetaData>
+    </ParametersFormMetaData>
+  </GlobalChangeSpec>

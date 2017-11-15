@@ -1,0 +1,346 @@
+﻿<GlobalChangeSpec
+	xmlns="bb_appfx_globalchange"
+	xmlns:common="bb_appfx_commontypes"
+	ID="f121bc6b-7403-4963-8d16-ae822053c8f5"
+	Name="Dedup Addresses Global Change"
+	Description="Delete unused duplicate addresses from constituent"
+	Author="HEIFERNET\khamling"
+	DisplayName="Dedup Addresses Global Change"
+	GlobalChangeFolder="Constituent"
+	SPName="USP_GLOBALCHANGE_DEDUPADDRESSES"
+>
+
+  <!-- describe the SP that performs the global change operation -->
+  <CreateProcedureSQL>
+    <![CDATA[
+create procedure dbo.USP_GLOBALCHANGE_DEDUPADDRESSES     
+(     
+      @CHANGEAGENTID uniqueidentifier = null,     
+      @ASOF as datetime = null,     
+      @NUMBERADDED int = 0 output,     
+      @NUMBEREDITED int = 0 output,     
+      @NUMBERDELETED int = 0 output,     
+      @CONSTITUENTSELECTIONID UNIQUEIDENTIFIER     
+)     
+as                    
+      set nocount off;     
+           
+      declare @CURRENTDATE datetime     
+      set @CURRENTDATE = getdate();     
+      set @NUMBERADDED = 0;     
+      set @NUMBEREDITED = 0;     
+      set @NUMBERDELETED = 0;      
+           
+      if @CHANGEAGENTID is null     
+            exec dbo.USP_CHANGEAGENT_GETORCREATECHANGEAGENT @CHANGEAGENTID output;      
+           
+      begin try     
+            -- do the global change operation here, and set @NUMBERADDED, @NUMBEREDITED, and/or @NUMBERDELETED as appropriate 
+            
+            --changed from delete to truncate so Primary Keys are reset, which is needed to cycled correctly through keys below
+            --delete used to work when these were temp tables in memory, but Alta changed to DB tables for performance, so now we must truncate.
+            truncate table USR_CONSTITUENTSELECTION
+            truncate table USR_CONT 
+            truncate table USR_addr_to_delete 
+            truncate table USR_cont2 
+            truncate table USR_addr_to_delete2 
+           
+    Begin     
+      
+      INSERT INTO USR_CONSTITUENTSELECTION (ID, ADDEDBYID, CHANGEDBYID, DATEADDED, DATECHANGED)    
+      SELECT id, @CHANGEAGENTID, @CHANGEAGENTID, @CURRENTDATE, @CURRENTDATE      
+      FROM   dbo.Ufn_idsetreader_getresults_guid(@CONSTITUENTSELECTIONID)    
+      
+      DELETE USR_CONSTITUENTSELECTION
+       WHERE ID IN (select constituentid from address group by constituentid having count(constituentid) <= 1)
+           
+                  --Populate temp table     
+      insert into USR_CONT(ID, CONSTID, ADDR, CITY, STATEID, ADDEDBYID, CHANGEDBYID, DATEADDED, DATECHANGED)     
+            select  
+            NEWID(),
+            constituentid,      
+            replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace     
+        (replace(replace(replace(replace(replace(replace(replace(replace     
+            (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(     
+            replace(replace(replace(replace(addressblock,'.',''),'drive','dr'),'street','st'),'avenue','ave')     
+            ,'road','rd'),'circle','cir'),'lane','ln'),'apartment','apt'),'suite','ste'),'Boulevard','blvd')     
+            ,'number','no'),' ',''),'grove','grv'),'place','pl'),'terrace','ter'),'trail','tr')     
+            ,'highway','hwy'),'court','ct'),'#','no'),'square','sq'),'north','n'),'south','s'),'east','e')     
+            ,'west','w'),'county','cnty'),'first','1st'),'second','2nd'),'third','3rd'),'fourth','4th')     
+            ,'fifth','5th'),'sixth','6th'),'seventh','7th'),'eighth','8th')     
+            ,'ninth','9th'),'tenth','10th'),'eleventh','11th'),'twelfth','12th'),char(13),''),char(10),'')     
+        ,'dr',''),'st',''),'ave',''),'rd',''),'ln',''),'apt',''),'no',''),',','')     
+            as bunched_addr,     
+             city, stateid,
+             @CHANGEAGENTID,
+             @CHANGEAGENTID,
+             @CURRENTDATE,
+             @CURRENTDATE     
+         --, count(*) as addr_count     
+         --, count(*)-1 as dup_addr_count      
+         from address     
+         inner join constituent c on c.id = address.constituentid      
+             inner join USR_CONSTITUENTSELECTION SelectionResults on SelectionResults.ID = c.id     
+            group by      
+              constituentid,      
+            replace(replace(replace(replace(replace(replace(replace(replace(replace(     
+        replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace     
+            (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(     
+            replace(replace(replace(replace(addressblock,'.',''),'drive','dr'),'street','st'),'avenue','ave')     
+            ,'road','rd'),'circle','cir'),'lane','ln'),'apartment','apt'),'suite','ste'),'Boulevard','blvd')     
+            ,'number','no'),' ',''),'grove','grv'),'place','pl'),'terrace','ter'),'trail','tr')     
+            ,'highway','hwy'),'court','ct'),'#','no'),'square','sq'),'north','n'),'south','s'),'east','e')     
+            ,'west','w'),'county','cnty'),'first','1st'),'second','2nd'),'third','3rd'),'fourth','4th')     
+            ,'fifth','5th'),'sixth','6th'),'seventh','7th'),'eighth','8th')     
+            ,'ninth','9th'),'tenth','10th'),'eleventh','11th'),'twelfth','12th'),char(13),''),char(10),'')     
+        ,'dr',''),'st',''),'ave',''),'rd',''),'ln',''),'apt',''),'no',''),',',''),     
+         city,      
+            stateid
+            having count(*)>1         
+                              
+      declare @I int = 1     
+      declare @I_MAX integer     
+      declare @CID uniqueidentifier     
+      declare @bunched_addr nvarchar(2000)     
+      select @I_MAX = count(*) from USR_CONT      
+      while @I <= @I_MAX     
+          begin              
+              select      
+          --@dup_addr_id = addrID     
+              @CID = ConstID,      
+              @bunched_addr = addr     
+              from USR_CONT      
+          where      
+          PK = @I       
+               
+          begin try     
+            insert into USR_ADDR_TO_DELETE(ID, ADDRID, ADDEDBYID, CHANGEDBYID, DATEADDED, DATECHANGED)      
+             select 
+             NEWID(),
+             id,
+             @CHANGEAGENTID,
+             @CHANGEAGENTID,
+             @CURRENTDATE,
+             @CURRENTDATE
+             from address where     
+              constituentid=@CID     
+              and replace(replace(replace(replace(replace(replace(     
+              replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace     
+                  (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(     
+                  replace(replace(replace(replace(addressblock,'.',''),'drive','dr'),'street','st'),'avenue','ave')     
+                  ,'road','rd'),'circle','cir'),'lane','ln'),'apartment','apt'),'suite','ste'),'Boulevard','blvd')     
+                  ,'number','no'),' ',''),'grove','grv'),'place','pl'),'terrace','ter'),'trail','tr')     
+                  ,'highway','hwy'),'court','ct'),'#','no'),'square','sq'),'north','n'),'south','s'),'east','e')     
+                  ,'west','w'),'county','cnty'),'first','1st'),'second','2nd'),'third','3rd'),'fourth','4th')     
+                  ,'fifth','5th'),'sixth','6th'),'seventh','7th'),'eighth','8th')     
+                  ,'ninth','9th'),'tenth','10th'),'eleventh','11th'),'twelfth','12th'),char(13),''),char(10),'')     
+              ,'dr',''),'st',''),'ave',''),'rd',''),'ln',''),'apt',''),'no',''),',','') = @bunched_addr     
+             and id not in     
+              (     
+              select top 1 id from address      
+                where      
+                  constituentid=@CID     
+                  and replace(replace(replace(replace(replace(replace(     
+                  replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace     
+                      (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(     
+                      replace(replace(replace(replace(addressblock,'.',''),'drive','dr'),'street','st'),'avenue','ave')     
+                      ,'road','rd'),'circle','cir'),'lane','ln'),'apartment','apt'),'suite','ste'),'Boulevard','blvd')     
+                      ,'number','no'),' ',''),'grove','grv'),'place','pl'),'terrace','ter'),'trail','tr')     
+                      ,'highway','hwy'),'court','ct'),'#','no'),'square','sq'),'north','n'),'south','s'),'east','e')     
+                      ,'west','w'),'county','cnty'),'first','1st'),'second','2nd'),'third','3rd'),'fourth','4th')     
+                      ,'fifth','5th'),'sixth','6th'),'seventh','7th'),'eighth','8th')     
+                      ,'ninth','9th'),'tenth','10th'),'eleventh','11th'),'twelfth','12th'),char(13),''),char(10),'')     
+                  ,'dr',''),'st',''),'ave',''),'rd',''),'ln',''),'apt',''),'no',''),',','') = @bunched_addr        
+                order by isprimary desc, postcode desc, addresstypecodeid desc     
+              ) 
+           
+                   
+          end try     
+              begin catch     
+                    exec dbo.USP_RAISE_ERROR;     
+                    return 1;     
+              end catch      
+         set @I = @I + 1        
+        end  --end I loop     
+             
+        declare @J int = 1     
+        declare @J_MAX integer     
+        declare @dup_addr_id uniqueidentifier     
+        select @J_MAX = count(*) from USR_ADDR_TO_DELETE     
+        while @J <= @J_MAX     
+          begin       --begin J loop       
+             begin try     
+               delete from address where id in     
+               (select addrid from USR_ADDR_TO_DELETE where PK = @J)     
+               set @NUMBERDELETED = @NUMBERDELETED+@@ROWCOUNT;     
+             end try     
+             begin catch   
+               -- do nothing; likely fk constraint violation so we don't want to do anything at this time if that's the case.     
+             end catch     
+             set @J = @J + 1       
+        end  --end J loop      
+            end     
+    Begin try     
+      -- Let's cycle through dup addresses again to see if any remaining dups remain from selection.  If there was a non-primary address     
+      -- set to keep earlier (top 1 based on previous order), this time through it will be set to delete while a different dup is set     
+      -- to keep based on new order by.  The reason for this is in case it couldn't delete a dup earlier to to FK constraint.  This will attempt     
+      -- to delete a different dup record.     
+      -- We must populate USR_CONT2  and USR_ADDR_TO_DELETE2 tables.  Basically we're running twice, but with different order by to attempt to     
+      -- delete a different dup record.  The primary will always be kept, but this is for non-primary sets of dups when a constituent     
+      -- has multiple sets of dups.     
+           
+                  insert into USR_CONT2 (ID, CONSTID, ADDR, CITY, STATEID, ADDEDBYID, CHANGEDBYID, DATEADDED, DATECHANGED)      
+            select      
+            NEWID(),
+            constituentid,      
+            replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace     
+            (replace(replace(replace(replace(replace(replace(replace(replace(replace     
+            (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(     
+            replace(replace(replace(replace(addressblock,'.',''),'drive','dr'),'street','st'),'avenue','ave')     
+            ,'road','rd'),'circle','cir'),'lane','ln'),'apartment','apt'),'suite','ste'),'Boulevard','blvd')     
+            ,'number','no'),' ',''),'grove','grv'),'place','pl'),'terrace','ter'),'trail','tr')     
+            ,'highway','hwy'),'court','ct'),'#','no'),'square','sq'),'north','n'),'south','s'),'east','e')     
+            ,'west','w'),'county','cnty'),'first','1st'),'second','2nd'),'third','3rd'),'fourth','4th')     
+            ,'fifth','5th'),'sixth','6th'),'seventh','7th'),'eighth','8th')     
+            ,'ninth','9th'),'tenth','10th'),'eleventh','11th'),'twelfth','12th'),char(13),''),char(10),'')     
+        ,'dr',''),'st',''),'ave',''),'rd',''),'ln',''),'apt',''),'no',''),',','')     
+            as bunched_addr,     
+             city, stateid,
+             @CHANGEAGENTID,
+             @CHANGEAGENTID,
+             @CURRENTDATE,
+             @CURRENTDATE
+         --, count(*) as addr_count     
+         --, count(*)-1 as dup_addr_count      
+         from address     
+         inner join constituent c on c.id = address.constituentid      
+             inner join USR_CONSTITUENTSELECTION SelectionResults on SelectionResults.ID = c.id     
+            group by      
+              constituentid,      
+            replace(replace(replace(replace(replace(replace(replace(replace(     
+            replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace     
+            (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(     
+            replace(replace(replace(replace(addressblock,'.',''),'drive','dr'),'street','st'),'avenue','ave')     
+            ,'road','rd'),'circle','cir'),'lane','ln'),'apartment','apt'),'suite','ste'),'Boulevard','blvd')     
+            ,'number','no'),' ',''),'grove','grv'),'place','pl'),'terrace','ter'),'trail','tr')     
+            ,'highway','hwy'),'court','ct'),'#','no'),'square','sq'),'north','n'),'south','s'),'east','e')     
+            ,'west','w'),'county','cnty'),'first','1st'),'second','2nd'),'third','3rd'),'fourth','4th')     
+            ,'fifth','5th'),'sixth','6th'),'seventh','7th'),'eighth','8th')     
+            ,'ninth','9th'),'tenth','10th'),'eleventh','11th'),'twelfth','12th'),char(13),''),char(10),'')     
+        ,'dr',''),'st',''),'ave',''),'rd',''),'ln',''),'apt',''),'no',''),',',''),     
+            city,      
+            stateid     
+            having count(*)>1         
+           
+      --begin K Loop     
+      declare @K int = 1     
+      declare @K_MAX integer     
+      --declare @CID uniqueidentifier     
+      --declare @bunched_addr nvarchar(2000)     
+      select @K_MAX = count(*) from USR_CONT2      
+      while @K <= @K_MAX     
+          begin              
+              select      
+          --@dup_addr_id = addrID     
+              @CID = ConstID,      
+              @bunched_addr = addr     
+              from USR_CONT2      
+          where      
+          PK = @K       
+               
+          begin try     
+            insert into USR_ADDR_TO_DELETE2(ID, ADDRID, ADDEDBYID, CHANGEDBYID, DATEADDED, DATECHANGED)     
+             select 
+             NEWID(),
+             id,
+             @CHANGEAGENTID,
+             @CHANGEAGENTID,
+             @CURRENTDATE,
+             @CURRENTDATE
+             from address where     
+              constituentid=@CID     
+              and replace(replace(replace(replace(replace(replace(     
+              replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace     
+                  (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(     
+                  replace(replace(replace(replace(addressblock,'.',''),'drive','dr'),'street','st'),'avenue','ave')     
+                  ,'road','rd'),'circle','cir'),'lane','ln'),'apartment','apt'),'suite','ste'),'Boulevard','blvd')     
+                  ,'number','no'),' ',''),'grove','grv'),'place','pl'),'terrace','ter'),'trail','tr')     
+                  ,'highway','hwy'),'court','ct'),'#','no'),'square','sq'),'north','n'),'south','s'),'east','e')     
+                  ,'west','w'),'county','cnty'),'first','1st'),'second','2nd'),'third','3rd'),'fourth','4th')     
+                  ,'fifth','5th'),'sixth','6th'),'seventh','7th'),'eighth','8th')     
+                  ,'ninth','9th'),'tenth','10th'),'eleventh','11th'),'twelfth','12th'),char(13),''),char(10),'')     
+              ,'dr',''),'st',''),'ave',''),'rd',''),'ln',''),'apt',''),'no',''),',','') = @bunched_addr     
+             and id not in     
+              (     
+              select top 1 id from address      
+                where      
+                  constituentid=@CID     
+                  and replace(replace(replace(replace(replace(replace(     
+                  replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace     
+                      (replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(     
+                      replace(replace(replace(replace(addressblock,'.',''),'drive','dr'),'street','st'),'avenue','ave')     
+                      ,'road','rd'),'circle','cir'),'lane','ln'),'apartment','apt'),'suite','ste'),'Boulevard','blvd')     
+                      ,'number','no'),' ',''),'grove','grv'),'place','pl'),'terrace','ter'),'trail','tr')     
+                      ,'highway','hwy'),'court','ct'),'#','no'),'square','sq'),'north','n'),'south','s'),'east','e')     
+                      ,'west','w'),'county','cnty'),'first','1st'),'second','2nd'),'third','3rd'),'fourth','4th')     
+                      ,'fifth','5th'),'sixth','6th'),'seventh','7th'),'eighth','8th')     
+                      ,'ninth','9th'),'tenth','10th'),'eleventh','11th'),'twelfth','12th'),char(13),''),char(10),'')     
+                  ,'dr',''),'st',''),'ave',''),'rd',''),'ln',''),'apt',''),'no',''),',','') = @bunched_addr        
+                order by isprimary desc, postcode asc, addresstypecodeid asc     
+              )     
+                   
+          end try     
+              begin catch     
+                    exec dbo.USP_RAISE_ERROR;     
+                    return 1;     
+              end catch      
+         set @K = @K + 1        
+        end  --end K loop     
+             
+      declare @L int = 1     
+        declare @L_MAX integer     
+        --declare @dup_addr_id uniqueidentifier     
+        select @L_MAX = count(*) from USR_ADDR_TO_DELETE2     
+        while @L <= @L_MAX     
+            begin       --begin L loop       
+             begin try     
+               delete from address where id in     
+               (select addrid from USR_ADDR_TO_DELETE2 where PK = @L)     
+               set @NUMBERDELETED = @NUMBERDELETED+@@ROWCOUNT;     
+             end try     
+             begin catch     
+               -- do nothing; likely fk constraint violation so we don't want to do anything at this time if that's the case.     
+             end catch     
+             set @L = @L + 1       
+        end  --end L loop 
+              
+    end try     
+    begin catch     
+      exec dbo.USP_RAISE_ERROR;     
+              return 1;     
+    end catch     
+      end try     
+           
+      begin catch     
+            exec dbo.USP_RAISE_ERROR;     
+            return 1;     
+      end catch 
+		]]>
+</CreateProcedureSQL>
+
+<ParametersFormMetaData>
+
+<FormMetaData xmlns="bb_appfx_commontypes">
+  <FormFields>
+    <FormField FieldID="CONSTITUENTSELECTIONID" DataType="Guid" Required="true" Caption="Constituent Selection">
+      <SearchList SearchListID="1f0e603c-1c55-4e1e-8218-bdb877b2cbe8" />
+    </FormField>
+  </FormFields>
+  <WebUIComponent>
+    <WebUI>
+      <DefaultWebUI />
+    </WebUI>
+  </WebUIComponent>
+</FormMetaData>
+</ParametersFormMetaData>
+</GlobalChangeSpec>

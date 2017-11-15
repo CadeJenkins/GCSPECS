@@ -1,0 +1,140 @@
+﻿  <GlobalChangeSpec
+      xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      ID="7c3fc048-d537-44e6-a603-fd97e241e9f3"
+      Name="Link Payments Global Change Test"
+      Description="Associate a revenue selection to a bank account deposit - Test"
+      Author="HEIFERNET\khamling"
+      SPName="USR_USP_GLOBALCHANGE_REVENUELINKPAYMENTS"
+      DisplayName="Link payments to deposit - Test"
+      GlobalChangeFolder="Revenue"
+      xmlns="bb_appfx_globalchange"
+    >
+    <CreateProcedureSQL>
+      <![CDATA[
+      create procedure dbo.USR_USP_GLOBALCHANGE_REVENUELINKPAYMENTS
+      (
+      @CHANGEAGENTID uniqueidentifier = null,
+      @ASOF as datetime = null,
+      @NUMBERADDED int = 0 output,
+      @NUMBEREDITED int = 0 output,
+      @NUMBERDELETED int = 0 output,
+      @IDSETREGISTERID uniqueidentifier,
+      @BANKACCOUNTID uniqueidentifier
+      )
+      as
+      set nocount off;
+
+      declare @I_MAX integer
+      declare @CURRENTDATE datetime
+      --set @CURRENTDATE = getdate();
+      --set @CURRENTDATE = cast(convert(nvarchar(30), GETDATE(), as datetime);
+      set @CURRENTDATE = cast(GETDATE() as date);
+      set @NUMBERADDED = 0;
+      set @NUMBEREDITED = 0;
+      set @NUMBERDELETED = 0;
+
+      declare @IDSETREGISTER table (ID uniqueidentifier primary key)
+      insert into @IDSETREGISTER
+      select * from dbo.ufn_IdSetReader_GetResults_guId(@IDSETREGISTERID)
+
+      if @CHANGEAGENTID is null
+      exec dbo.USP_CHANGEAGENT_GETORCREATECHANGEAGENT @CHANGEAGENTID output;
+
+      begin try
+      declare @ID uniqueidentifier
+      declare @PAYMENTXML xml
+      
+      -- First create a new deposit for the bank account
+      exec USP_DATAFORMTEMPLATE_ADD_DEPOSIT @ID output, @BANKACCOUNTID, @CHANGEAGENTID, '', @CURRENTDATE, 1, @CURRENTDATE, 0, 0, 1
+
+      ---------
+      declare @T table
+      (
+      PK int identity(1,1),
+      REVENUEID uniqueidentifier
+      )
+      declare @I int = 1
+
+      insert into @T
+      select ID
+      from @IDSETREGISTER SelectionResults
+
+      select @I_MAX = count(*) from @T
+
+      declare @REVENUEID uniqueidentifier
+
+      --BEGIN LOOPING THROUGH TABLE DEFINED ABOVE
+      while @I <= @I_MAX
+      begin
+      
+          select 
+          @REVENUEID = REVENUEID
+          from 
+            @T 
+          where 
+            PK = @I   
+            
+            
+          -- Get the selected revenue into the XML format
+          set @PAYMENTXML = (select
+          [REVENUE].[ID],
+          [REVENUE].[DATE] as [TRANSACTIONDATE],
+          [REVENUEPAYMENTMETHOD].[PAYMENTMETHOD],
+          [REVENUE].[AMOUNT],
+          [REVENUE].[TRANSACTIONTYPE]
+          from
+          dbo.REVENUE
+          --inner join @IDSETREGISTER I on REVENUE.ID = I.ID
+          inner join dbo.REVENUEPAYMENTMETHOD on REVENUE.ID = REVENUEPAYMENTMETHOD.REVENUEID
+          where revenue.id = @REVENUEID
+          for xml raw('ITEM'),type,elements,root('PAYMENTS'),BINARY BASE64)
+                              
+          begin try
+            begin transaction
+            -- Link the payments
+            exec USP_LINKPAYMENTSTODEPOSIT @ID output, @CHANGEAGENTID, @ID, @PAYMENTXML  
+            commit transaction
+            set @NUMBERADDED = @NUMBERADDED+1
+          end try
+          begin catch
+            --do nothing, just skip this and it will show up as unlinked payment
+            rollback transaction           
+          end catch
+                  
+          set @I = @I + 1   		
+      --END LOOPING THROUGH TABLE DEFINED ABOVE      
+      end
+
+      ---------   
+    end try
+    begin catch
+      exec dbo.USP_RAISE_ERROR;
+      return 1;
+    end catch
+    ]]>
+    </CreateProcedureSQL>
+    <ParametersFormMetaData>
+      <FormMetaData xmlns="bb_appfx_commontypes">
+        <FormFields>
+          <FormField FieldID="IDSETREGISTERID" DataType="Guid" Required="true" Caption="Revenue selection">
+            <SearchList SearchListID="1f0e603c-1c55-4e1e-8218-bdb877b2cbe8">
+              <FormFieldOverrides>
+                <FormFieldOverride FieldID="RECORDTYPE" Caption="Record type" ReadOnly="true" DefaultValueText="Revenue" />
+              </FormFieldOverrides>
+            </SearchList>
+          </FormField>
+          <FormField FieldID="BANKACCOUNTID" DataType="Guid" Required="true" Caption="Bank account" CaptionResourceKey="$$bank_account">
+            <SearchList SearchListID="d1494a22-000c-4ee3-92bc-4bb2d57d74d1" EnableQuickFind="true">
+              <FormFieldOverrides>
+                <FormFieldOverride FieldID="STATUSCODE" ReadOnly="true" DefaultValueText="1" />
+              </FormFieldOverrides>
+              <AddDataForms>
+                <AddDataForm ID="12f424fd-c786-4f54-997d-e5198d0e76f3" Caption="New" CaptionResourceKey="$$new" />
+              </AddDataForms>
+            </SearchList>
+          </FormField>
+        </FormFields>
+      </FormMetaData>
+    </ParametersFormMetaData>
+  </GlobalChangeSpec>
