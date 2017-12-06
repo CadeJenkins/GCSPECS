@@ -74,17 +74,26 @@
     </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Blackbaud.AppFx, Version=2.93.2034.0, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="Blackbaud.AppFx, Version=4.0.170.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\Program Files\Blackbaud\bbappfx\vroot\bin\Blackbaud.AppFx.dll</HintPath>
+    </Reference>
     <Reference Include="Blackbaud.AppFx.Server, Version=1.0.128.756, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Blackbaud.AppFx.UIModeling.Core, Version=2.93.2034.0, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="Blackbaud.AppFx.UIModeling.Core, Version=4.0.170.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\Program Files\Blackbaud\bbappfx\vroot\bin\Blackbaud.AppFx.UIModeling.Core.dll</HintPath>
+    </Reference>
     <Reference Include="Blackbaud.AppFx.XmlTypes, Version=1.0.128.756, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Blackbaud.AppFx.XmlTypes.XmlSerializers, Version=2.93.2034.0, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="Blackbaud.AppFx.XmlTypes.XmlSerializers, Version=4.0.170.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\..\Program Files\Blackbaud\bbappfx\vroot\bin\Blackbaud.AppFx.XmlTypes.XmlSerializers.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
